@@ -1,0 +1,22 @@
+Endpoint
+
+1. HomePage
+News
+- Photos/news/Followings
+- Photos/news/Popular
+- Search?keyword=?....
+
+2. Detail Photopage
+- Photos/3/detail
+- Users/1/info
+- Photo/3/comments
+
+3. Profile
+- Users/3/profile
+- Users/3/photos/Posted
+- Users/3/photos/Liked
+
+4. Login/register
+- Auth/login
+- Auth/register
+- Auth/logout
