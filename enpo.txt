@@ -20,3 +20,7 @@ News
 - Auth/login
 - Auth/register
 - Auth/logout
+
+5. Statistic
+- Statistic/posts
+- Statistic/users
