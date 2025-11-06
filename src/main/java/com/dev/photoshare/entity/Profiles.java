@@ -11,11 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        indexes = {
-                @Index(name = "idx_unique_user_profile", columnList = "user_id", unique = true)
-        }
-)
+@Table(name = "profiles")
 @Getter
 @Setter
 @NoArgsConstructor
