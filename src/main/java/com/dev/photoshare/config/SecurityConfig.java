@@ -10,16 +10,23 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(
+//                                "/v3/api-docs/**",
+//                                "/swagger-ui/**",
+//                                "/swagger-ui.html"
+//                        ).permitAll() // Cho phép truy cập Swagger
+//                        .anyRequest().authenticated() // Các API khác vẫn cần login
+//                )
+//                .csrf(csrf -> csrf.disable()); // Swagger không cần CSRF token
+//        return http.build();
+
         http
+                .csrf(csrf -> csrf.disable()) // Tắt CSRF để test API multipart/form-data
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll() // Cho phép truy cập Swagger
-                        .anyRequest().authenticated() // Các API khác vẫn cần login
-                )
-                .csrf(csrf -> csrf.disable()); // Swagger không cần CSRF token
+                        .anyRequest().permitAll() // Cho phép tất cả request
+                );
         return http.build();
     }
 }
