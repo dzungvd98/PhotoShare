@@ -2,10 +2,7 @@ package com.dev.photoshare.entity;
 
 import com.dev.photoshare.utils.enums.UserStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -25,6 +22,7 @@ import java.util.Date;
                 @Index(name = "idx_user_status_role", columnList = "status, role_id")
         }
 )
+@Builder
 public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -27,3 +27,7 @@ spring:
     web:
       resources:
         static-locations: file:./uploads/
+jwt:
+  secret: YourVeryLongAndSecureSecretKeyAtLeast256BitsForHS256Algorithm
+  access-token-expiration: 900000 # 15 minutes
+  refresh-token-expiration: 2592000000 # 30 days
