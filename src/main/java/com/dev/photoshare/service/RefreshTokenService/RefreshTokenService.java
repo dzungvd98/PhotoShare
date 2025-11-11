@@ -1,6 +1,8 @@
 package com.dev.photoshare.service.RefreshTokenService;
 import com.dev.photoshare.entity.RefreshToken;
 import com.dev.photoshare.entity.Users;
+import com.dev.photoshare.exception.TokenAlreadyRevokedException;
+import com.dev.photoshare.exception.TokenNotFoundException;
 import com.dev.photoshare.exception.TokenRefreshException;
 import com.dev.photoshare.repository.RefreshTokenRepository;
 import com.dev.photoshare.repository.UserRepository;
@@ -69,10 +71,10 @@ public class RefreshTokenService implements IRefreshTokenService {
     @Transactional
     public void revokeToken(String token) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new TokenNotFoundException(token, "Refresh token not found"));
+                .orElseThrow(() -> new TokenNotFoundException("Refresh token not found"));
 
         if (Boolean.TRUE.equals(refreshToken.getRevoked())) {
-            throw new TokenAlreadyRevokedException(token, "Refresh token is already revoked");
+            throw new TokenAlreadyRevokedException("Refresh token is already revoked");
         }
 
         refreshToken.setRevoked(true);

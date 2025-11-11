@@ -18,6 +18,7 @@ import com.dev.photoshare.exception.UserNotFoundException;
 import com.dev.photoshare.repository.RoleRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.security.JwtTokenProvider;
+import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
 import com.dev.photoshare.service.RefreshTokenService.IRefreshTokenService;
 import com.dev.photoshare.utils.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final IRefreshTokenService refreshTokenService;
+    private final JwtBlacklistService jwtBlacklistService;
 
     @Transactional
     public String register(RegisterRequest request) {
@@ -148,6 +150,9 @@ public class AuthService implements IAuthService {
     @Transactional
     public MessageResponse logout(LogoutRequest request, String accessToken) {
         String refreshToken = request.getRefreshToken();
+
+        jwtBlacklistService.blacklistToken(accessToken);
+        log.info("Add access token to blacklist for user: {}", accessToken);
 
         // Revoke refresh token
         refreshTokenService.revokeToken(refreshToken);

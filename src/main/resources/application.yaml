@@ -3,9 +3,9 @@ spring:
     name: photoshare
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/photoshare
-    username: postgres
-    password: 123456
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/photoshare}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -27,6 +27,14 @@ spring:
     web:
       resources:
         static-locations: file:./uploads/
+
+  data:
+    redis:
+      host:  ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      timeout: 60000
+
 jwt:
   secret: YourVeryLongAndSecureSecretKeyAtLeast256BitsForHS256Algorithm
   access-token-expiration: 900000 # 15 minutes

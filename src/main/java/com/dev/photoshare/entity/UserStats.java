@@ -14,7 +14,7 @@ public class UserStats {
 
     @Id
     @Column(name = "user_id")
-    private Long userId; // Trùng với User.id
+    private Integer userId; // Trùng với User.id
 
     @Column(name = "followers_count", nullable = false)
     @Builder.Default
