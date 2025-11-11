@@ -11,16 +11,14 @@ import com.dev.photoshare.dto.response.UserResponse;
 import com.dev.photoshare.entity.RefreshToken;
 import com.dev.photoshare.entity.Roles;
 import com.dev.photoshare.entity.Users;
-import com.dev.photoshare.exception.EmailAlreadyExistsException;
-import com.dev.photoshare.exception.InvalidCredentialsException;
-import com.dev.photoshare.exception.TokenRefreshException;
-import com.dev.photoshare.exception.UserNotFoundException;
+import com.dev.photoshare.exception.*;
 import com.dev.photoshare.repository.RoleRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.security.JwtTokenProvider;
 import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
 import com.dev.photoshare.service.RefreshTokenService.IRefreshTokenService;
 import com.dev.photoshare.utils.enums.UserStatus;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,8 +29,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+
+import static com.dev.photoshare.utils.enums.TokenType.ACCESS_TOKEN;
+import static com.dev.photoshare.utils.enums.TokenType.REFRESH_TOKEN;
 
 @Service
 @RequiredArgsConstructor
@@ -125,18 +127,18 @@ public class AuthService implements IAuthService {
     }
 
     @Transactional
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
-        String requestRefreshToken = request.getRefreshToken();
+    public AuthResponse refreshToken(HttpServletRequest request, Authentication authentication) {
+        String requestRefreshToken = getTokenFromHeader(request);
 
         RefreshToken oldToken = refreshTokenService.findByToken(requestRefreshToken)
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));
 
         refreshTokenService.verifyExpiration(oldToken); // nếu expired sẽ throw
 
-        RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(oldToken);
+        RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(oldToken, authentication, oldToken.getUser());
 
         // Tạo access token mới
-        String newAccessToken = jwtTokenProvider.generateAccessToken(oldToken.getUser().getUsername());
+        String newAccessToken = jwtTokenProvider.generateToken(authentication, REFRESH_TOKEN);
 
         log.info("Token refreshed successfully for user: {}", oldToken.getUser().getUsername());
 
@@ -174,8 +176,9 @@ public class AuthService implements IAuthService {
 
     // Helper method to generate auth response
     private AuthResponse generateAuthResponse(Authentication authentication, Users user) {
-        String accessToken = jwtTokenProvider.generateAccessToken(authentication);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+        String accessToken = jwtTokenProvider.generateToken(authentication, ACCESS_TOKEN);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(authentication, user);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -194,5 +197,13 @@ public class AuthService implements IAuthService {
                 .roleName(user.getRole().getRoleName())
                 .lastLogin(user.getLastLogin())
                 .build();
+    }
+
+    private String getTokenFromHeader(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith("Bearer ")) {
+            throw new TokenNotFoundException("No refresh token found in request headers!");
+        }
+        return bearerToken.substring(7);
     }
 }

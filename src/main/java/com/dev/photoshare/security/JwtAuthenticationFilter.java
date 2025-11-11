@@ -1,6 +1,7 @@
 package com.dev.photoshare.security;
 
 import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
+import com.dev.photoshare.utils.enums.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,25 +35,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-
-
             if (StringUtils.hasText(jwt)) {
-                if (jwtBlacklistService.isTokenBlacklisted(jwt)) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("This token has been blacklisted (logged out).");
-                    return; // Dừng lại
+
+                TokenType type = tokenProvider.getTokenType(jwt);
+                if (type == TokenType.ACCESS_TOKEN) {
+                    if (jwtBlacklistService.isTokenBlacklisted(jwt)) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.getWriter().write("This token has been blacklisted (logged out).");
+                        return; // Dừng lại
+                    }
+
+                    if(tokenProvider.validateToken(jwt, TokenType.ACCESS_TOKEN)) {
+                        String username = tokenProvider.getUsernameFromToken(jwt, TokenType.ACCESS_TOKEN);
+
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                } else  if (type == TokenType.REFRESH_TOKEN) {
+                    String requestURI = request.getRequestURI();
+                    if (!"/auth/refresh".equals(requestURI)) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.getWriter().write("Refresh token is only allowed for /auth/refresh endpoint");
+                        return;
+                    }
+
+                    if (!tokenProvider.validateToken(jwt, type)) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.getWriter().write("Invalid refresh token");
+                        return;
+                    }
                 }
 
-                if(tokenProvider.validateToken(jwt)) {
-                    String username = tokenProvider.getUsernameFromToken(jwt);
-
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);

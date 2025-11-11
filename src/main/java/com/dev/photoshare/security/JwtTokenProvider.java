@@ -1,22 +1,29 @@
 package com.dev.photoshare.security;
 
+import com.dev.photoshare.utils.enums.TokenType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+
+import static com.dev.photoshare.utils.enums.TokenType.ACCESS_TOKEN;
+import static com.dev.photoshare.utils.enums.TokenType.REFRESH_TOKEN;
 
 @Component
 @Slf4j
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    @Value("${jwt.secret.access}")
+    private String accessSecret;
+
+    @Value("${jwt.secret.refresh}")
+    private String refreshSecret;
 
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpirationMs;
@@ -24,39 +31,74 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpirationMs;
 
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    private Key getSigningKey(TokenType type) {
+        String secret = switch (type) {
+            case ACCESS_TOKEN -> accessSecret;
+            case REFRESH_TOKEN -> refreshSecret;
+            default -> throw new IllegalArgumentException("Invalid token type");
+        };
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return generateAccessToken(userDetails.getUsername());
+    public String generateToken(Authentication authentication, TokenType type) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        return switch (type) {
+            case ACCESS_TOKEN -> generateAccessToken(userDetails);
+            case REFRESH_TOKEN -> generateRefreshToken(userDetails);
+            default -> throw new IllegalArgumentException("Invalid token type");
+        };
     }
 
-    public String generateAccessToken(String username) {
+    private String generateAccessToken(CustomUserDetails userDetails) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpirationMs);
+        Date expiryDate = new Date(System.currentTimeMillis() + accessTokenExpirationMs);
 
         return Jwts.builder()
-                .setSubject(username)
+                .setHeaderParam("typ", ACCESS_TOKEN.toString())
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .claim("type", "access")
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .claim("user", userDetails)
+                .signWith(getSigningKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public Long getAccessTokenExpirationInSeconds() {
-        return accessTokenExpirationMs / 1000;
+    private String generateRefreshToken(CustomUserDetails userDetails) {
+        Date now = new Date();
+        Date expiryDate = new Date(System.currentTimeMillis() + refreshTokenExpirationMs);
+
+        return Jwts.builder()
+                .setHeaderParam("typ", REFRESH_TOKEN.toString())
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .claim("user", userDetails)
+                .signWith(getSigningKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public Long getRefreshTokenExpirationInSeconds() {
-        return refreshTokenExpirationMs / 1000;
+    public TokenType getTokenType(String token) {
+        JwsHeader header = Jwts.parserBuilder()
+                .build()
+                .parseClaimsJws(token)
+                .getHeader();
+
+        String typ = (String) header.get("typ"); // đọc string từ header
+        if (typ == null) {
+            throw new IllegalArgumentException("Token type not found in JWT header");
+        }
+
+        return switch (typ) {
+            case "ACCESS_TOKEN" -> ACCESS_TOKEN;
+            case "REFRESH_TOKEN" -> REFRESH_TOKEN;
+            default -> throw new IllegalArgumentException("Unknown token type: " + typ);
+        };
     }
 
-    public String getUsernameFromToken(String token) {
+    public String getUsernameFromToken(String token, TokenType type) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(getSigningKey(type))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -64,10 +106,16 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    public Integer getUserIdFromToken(String token, TokenType type) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(getSigningKey(type)).build()
+                .parseClaimsJws(token).getBody();
+        return claims.get("userId", Integer.class);
+    }
+
     // Get expiration date from token
-    public Date getExpirationDateFromToken(String token) {
+    public Date getExpirationDateFromToken(String token, TokenType type) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(getSigningKey(type))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -75,11 +123,14 @@ public class JwtTokenProvider {
         return claims.getExpiration();
     }
 
+
+
+
     // Validate token
-    public boolean validateToken(String token) {
+    public boolean validateToken(String token, TokenType type) {
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+                    .setSigningKey(getSigningKey(type))
                     .build()
                     .parseClaimsJws(token);
             return true;

@@ -30,16 +30,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("User account is not active");
         }
 
-        return User
-                .withUsername(user.getUsername())
+        return CustomUserDetails.builder()
+                .id(user.getId())
+                .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(Collections.singletonList(
                         new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName().toUpperCase())
                 ))
-                .accountExpired(false)
-                .accountLocked(false)
-                .credentialsExpired(false)
-                .disabled(false)
                 .build();
     }
 }

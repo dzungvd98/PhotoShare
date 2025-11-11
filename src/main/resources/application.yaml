@@ -36,6 +36,9 @@ spring:
       timeout: 60000
 
 jwt:
-  secret: YourVeryLongAndSecureSecretKeyAtLeast256BitsForHS256Algorithm
   access-token-expiration: 900000 # 15 minutes
   refresh-token-expiration: 2592000000 # 30 days
+  secret:
+    access: ${JWT_ACCESS_SECRET:0123456789abcdef0123456789abc2def}
+    refresh: ${JWT_REFRESH_SECRET:012433456789absdfsdf456789abcdef}
+

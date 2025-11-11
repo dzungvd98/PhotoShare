@@ -6,16 +6,21 @@ import com.dev.photoshare.exception.TokenNotFoundException;
 import com.dev.photoshare.exception.TokenRefreshException;
 import com.dev.photoshare.repository.RefreshTokenRepository;
 import com.dev.photoshare.repository.UserRepository;
+import com.dev.photoshare.security.CustomUserDetails;
+import com.dev.photoshare.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.dev.photoshare.utils.enums.TokenType.REFRESH_TOKEN;
 
 @Service
 @RequiredArgsConstructor
@@ -26,19 +31,20 @@ public class RefreshTokenService implements IRefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+
 
     // Create refresh token
     @Transactional
-    public RefreshToken createRefreshToken(Integer userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public RefreshToken createRefreshToken(Authentication authentication, Users user) {
+        String token = jwtTokenProvider.generateToken(authentication, REFRESH_TOKEN);
 
         // Revoke all existing tokens for this user (optional - for single device login)
         // refreshTokenRepository.revokeAllUserTokens(user);
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
-                .token(UUID.randomUUID().toString())
+                .token(token)
                 .expiryDate(Instant.now().plusMillis(refreshTokenDurationMs))
                 .revoked(false)
                 .build();
@@ -95,13 +101,13 @@ public class RefreshTokenService implements IRefreshTokenService {
     }
 
     @Transactional
-    public RefreshToken rotateRefreshToken(RefreshToken oldToken) {
+    public RefreshToken rotateRefreshToken(RefreshToken oldToken, Authentication authentication, Users user) {
         if (oldToken.isExpired() || oldToken.getRevoked()) {
             throw new RuntimeException("Refresh token is expired or revoked");
         }
 
         // Tạo token mới
-        RefreshToken newToken = createRefreshToken(oldToken.getUser().getId());
+        RefreshToken newToken = createRefreshToken(authentication, user);
 
         // Đánh dấu token cũ là revoked
         oldToken.setRevoked(true);

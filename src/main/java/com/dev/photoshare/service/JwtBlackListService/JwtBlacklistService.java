@@ -7,8 +7,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import java.time.Duration;
 import java.time.Instant;
 
+import static com.dev.photoshare.utils.enums.TokenType.ACCESS_TOKEN;
+
 @Service
-@RequiredArgsConstructor // Tự động tiêm (inject) các final fields
+@RequiredArgsConstructor
 public class JwtBlacklistService {
 
     private final StringRedisTemplate redisTemplate;
@@ -20,7 +22,7 @@ public class JwtBlacklistService {
      * Thêm Access Token vào blacklist khi logout.
      */
     public void blacklistToken(String accessToken) {
-        Instant expiryTime = jwtService.getExpirationDateFromToken(accessToken).toInstant();
+        Instant expiryTime = jwtService.getExpirationDateFromToken(accessToken, ACCESS_TOKEN).toInstant();
         Instant now = Instant.now();
 
         // Chỉ lưu nếu token vẫn còn hạn

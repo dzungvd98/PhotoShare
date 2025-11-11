@@ -7,8 +7,10 @@ import com.dev.photoshare.exception.UserNotFoundException;
 import com.dev.photoshare.repository.FollowRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.repository.UserStatsRepository;
+import com.dev.photoshare.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +25,9 @@ public class FollowService implements IFollowService{
     private final UserStatsRepository userStatsRepository;
 
     @Transactional
-    public String followUser(Integer followerId, String targetUsername) {
-        Users follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new UserNotFoundException("Follower not found"));
+    public String followUser(String targetUsername) {
+        Integer followerId = ((CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal()).getId();
 
         Users target = userRepository.findByUsername(targetUsername)
                 .orElseThrow(() -> new UserNotFoundException("Target user not found"));
@@ -35,7 +37,6 @@ public class FollowService implements IFollowService{
 
         boolean isNewFollow = follow.getId() == null;
 
-        follow.setFollower(follower);
         follow.setFollowed(target);
 
         followRepository.save(follow);
@@ -62,7 +63,10 @@ public class FollowService implements IFollowService{
 
 
     @Transactional
-    public String unfollowUser(Integer followerId, String targetUsername) {
+    public String unfollowUser(String targetUsername) {
+        Integer followerId = ((CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal()).getId();
+
         Users target = userRepository.findByUsername(targetUsername)
                 .orElseThrow(() -> new UserNotFoundException("Target user not found"));
 
