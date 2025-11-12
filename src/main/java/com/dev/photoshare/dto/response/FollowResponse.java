@@ -1,13 +1,16 @@
 package com.dev.photoshare.dto.response;
 
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@Builder
 public class FollowResponse {
-    private String message;
-    private String followStatus;
+    private String status;
+    private Integer followerFollowingCount;
+    private Integer followerFollowersCount;
+    private Integer targetFollowingCount;
+    private Integer targetFollowersCount;
 }

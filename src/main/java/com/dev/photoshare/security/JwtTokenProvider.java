@@ -51,6 +51,7 @@ public class JwtTokenProvider {
     }
 
     private String generateAccessToken(CustomUserDetails userDetails) {
+        log.info("Generating access token for user {}", userDetails.getUsername());
         Date now = new Date();
         Date expiryDate = new Date(System.currentTimeMillis() + accessTokenExpirationMs);
 
@@ -59,12 +60,14 @@ public class JwtTokenProvider {
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .claim("user", userDetails)
+                .claim("userId", userDetails.getId())
+                .claim("roles", userDetails.getAuthorities())
                 .signWith(getSigningKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     private String generateRefreshToken(CustomUserDetails userDetails) {
+        log.info("Generating refresh token for user {}", userDetails.getUsername());
         Date now = new Date();
         Date expiryDate = new Date(System.currentTimeMillis() + refreshTokenExpirationMs);
 
@@ -73,16 +76,19 @@ public class JwtTokenProvider {
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .claim("user", userDetails)
-                .signWith(getSigningKey(ACCESS_TOKEN), SignatureAlgorithm.HS256)
+                .claim("userId", userDetails.getId())
+                .claim("roles", userDetails.getAuthorities())
+                .signWith(getSigningKey(REFRESH_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public TokenType getTokenType(String token) {
+        log.info("Getting token type for token {}", token);
         JwsHeader header = Jwts.parserBuilder()
                 .build()
                 .parseClaimsJws(token)
                 .getHeader();
+
 
         String typ = (String) header.get("typ"); // đọc string từ header
         if (typ == null) {

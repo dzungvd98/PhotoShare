@@ -33,43 +33,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            String jwt = getJwtFromRequest(request);
+            String accessJwt = getJwtFromRequest(request, "Authorization-Access");
+            String refreshJwt = getJwtFromRequest(request, "Authorization-Refresh");
 
-            if (StringUtils.hasText(jwt)) {
+            if (StringUtils.hasText(accessJwt)) {
 
-                TokenType type = tokenProvider.getTokenType(jwt);
-                if (type == TokenType.ACCESS_TOKEN) {
-                    if (jwtBlacklistService.isTokenBlacklisted(jwt)) {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.getWriter().write("This token has been blacklisted (logged out).");
-                        return; // Dừng lại
-                    }
+//                if (jwtBlacklistService.isTokenBlacklisted(accessJwt)) {
+//                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                    response.getWriter().write("This token has been blacklisted (logged out).");
+//                    return; // Dừng lại
+//                }
 
-                    if(tokenProvider.validateToken(jwt, TokenType.ACCESS_TOKEN)) {
-                        String username = tokenProvider.getUsernameFromToken(jwt, TokenType.ACCESS_TOKEN);
+                if (tokenProvider.validateToken(accessJwt, TokenType.ACCESS_TOKEN)) {
 
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    String username = tokenProvider.getUsernameFromToken(accessJwt, TokenType.ACCESS_TOKEN);
 
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
-                } else  if (type == TokenType.REFRESH_TOKEN) {
-                    String requestURI = request.getRequestURI();
-                    if (!"/auth/refresh".equals(requestURI)) {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.getWriter().write("Refresh token is only allowed for /auth/refresh endpoint");
-                        return;
-                    }
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    if (!tokenProvider.validateToken(jwt, type)) {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.getWriter().write("Invalid refresh token");
-                        return;
-                    }
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid access token");
+                    return;
                 }
+            }
 
+            if (StringUtils.hasText(refreshJwt)) {
+
+                if (!tokenProvider.validateToken(refreshJwt, TokenType.REFRESH_TOKEN)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid refresh token");
+                    return;
+                } else {
+                    String username = tokenProvider.getUsernameFromToken(refreshJwt, TokenType.REFRESH_TOKEN);
+
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
@@ -78,8 +85,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
+    private String getJwtFromRequest(HttpServletRequest request, String headerName) {
+        String bearerToken = request.getHeader(headerName);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }

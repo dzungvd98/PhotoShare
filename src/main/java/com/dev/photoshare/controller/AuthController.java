@@ -17,10 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/auth")
@@ -46,19 +43,18 @@ public class AuthController {
     @PostMapping("/refresh")
     @Operation(summary = "Refresh access token")
     public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
+        String refreshToken = getJwtFromRequest(request, "Authorization-Refresh");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AuthResponse response = authService.refreshToken(request, authentication);
+        AuthResponse response = authService.refreshToken(refreshToken, authentication);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user")
-    public ResponseEntity<MessageResponse> logout(
-            @Valid @RequestBody LogoutRequest request,
-            HttpServletRequest httpRequest) {
-
-        String accessToken = getJwtFromRequest(httpRequest);
-        MessageResponse response = authService.logout(request, accessToken);
+    public ResponseEntity<MessageResponse> logout(HttpServletRequest request) {
+        String refreshToken = getJwtFromRequest(request, "Authorization-Refresh");
+        String accessToken = getJwtFromRequest(request, "Authorization-Access");
+        MessageResponse response = authService.logout(accessToken, refreshToken);
         return ResponseEntity.ok(response);
     }
 
@@ -70,9 +66,8 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // Helper method to extract JWT from request
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
+    private String getJwtFromRequest(HttpServletRequest request, String headerName) {
+        String bearerToken = request.getHeader(headerName);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }

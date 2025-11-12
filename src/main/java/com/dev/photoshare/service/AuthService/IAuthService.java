@@ -12,7 +12,7 @@ import org.springframework.security.core.Authentication;
 public interface IAuthService {
     String register(RegisterRequest request);
     AuthResponse login(LoginRequest request);
-    AuthResponse refreshToken(HttpServletRequest request, Authentication authentication);
-    MessageResponse logout(LogoutRequest request, String accessToken);
+    AuthResponse refreshToken(String refreshToken, Authentication authentication);
+    MessageResponse logout(String accessToken, String refreshToken);
     MessageResponse logoutAll(String username);
 }

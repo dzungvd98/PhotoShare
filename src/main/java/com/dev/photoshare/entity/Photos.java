@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Photos {
 
     @Id
@@ -31,7 +35,6 @@ public class Photos {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-
     private Long fileSize;
 
     @Enumerated(EnumType.STRING)
@@ -42,6 +45,7 @@ public class Photos {
     @Column(nullable = false)
     private ModerationStatus moderationStatus = ModerationStatus.PENDING;
 
+    @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private Users user;

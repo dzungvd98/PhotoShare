@@ -42,3 +42,7 @@ jwt:
     access: ${JWT_ACCESS_SECRET:0123456789abcdef0123456789abc2def}
     refresh: ${JWT_REFRESH_SECRET:012433456789absdfsdf456789abcdef}
 
+
+logging:
+  level:
+    com.dev.photoshare.security: DEBUG

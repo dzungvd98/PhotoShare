@@ -8,10 +8,9 @@ import com.dev.photoshare.dto.request.RegisterRequest;
 import com.dev.photoshare.dto.response.AuthResponse;
 import com.dev.photoshare.dto.response.MessageResponse;
 import com.dev.photoshare.dto.response.UserResponse;
-import com.dev.photoshare.entity.RefreshToken;
-import com.dev.photoshare.entity.Roles;
-import com.dev.photoshare.entity.Users;
+import com.dev.photoshare.entity.*;
 import com.dev.photoshare.exception.*;
+import com.dev.photoshare.repository.ProfileRepository;
 import com.dev.photoshare.repository.RoleRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.security.JwtTokenProvider;
@@ -48,6 +47,7 @@ public class AuthService implements IAuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final IRefreshTokenService refreshTokenService;
     private final JwtBlacklistService jwtBlacklistService;
+    private final ProfileRepository profileRepository;
 
     @Transactional
     public String register(RegisterRequest request) {
@@ -72,8 +72,9 @@ public class AuthService implements IAuthService {
                             .build();
                     return roleRepository.save(newRole);
                 });
+        Profiles profile = new Profiles();
+        UserStats userStats = new UserStats();
 
-        // Create new user
         Users user = Users.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -82,7 +83,12 @@ public class AuthService implements IAuthService {
                 .authProvider("local")
                 .status(UserStatus.ACTIVE)
                 .role(userRole)
+                .profile(profile)
+                .userStats(userStats)
                 .build();
+
+        profile.setUser(user);
+        userStats.setUser(user);
 
         Users savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
@@ -127,18 +133,16 @@ public class AuthService implements IAuthService {
     }
 
     @Transactional
-    public AuthResponse refreshToken(HttpServletRequest request, Authentication authentication) {
-        String requestRefreshToken = getTokenFromHeader(request);
-
-        RefreshToken oldToken = refreshTokenService.findByToken(requestRefreshToken)
-                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database!"));
+    public AuthResponse refreshToken(String refreshToken, Authentication authentication) {
+        RefreshToken oldToken = refreshTokenService.findByToken(refreshToken)
+                .orElseThrow(() -> new TokenRefreshException(refreshToken, "Refresh token is not in database!"));
 
         refreshTokenService.verifyExpiration(oldToken); // nếu expired sẽ throw
 
         RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(oldToken, authentication, oldToken.getUser());
 
         // Tạo access token mới
-        String newAccessToken = jwtTokenProvider.generateToken(authentication, REFRESH_TOKEN);
+        String newAccessToken = jwtTokenProvider.generateToken(authentication, ACCESS_TOKEN);
 
         log.info("Token refreshed successfully for user: {}", oldToken.getUser().getUsername());
 
@@ -150,9 +154,7 @@ public class AuthService implements IAuthService {
     }
 
     @Transactional
-    public MessageResponse logout(LogoutRequest request, String accessToken) {
-        String refreshToken = request.getRefreshToken();
-
+    public MessageResponse logout(String accessToken, String refreshToken) {
         jwtBlacklistService.blacklistToken(accessToken);
         log.info("Add access token to blacklist for user: {}", accessToken);
 

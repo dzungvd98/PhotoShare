@@ -46,6 +46,12 @@ public class Users {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Profiles profile;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UserStats userStats;
+
     @Enumerated(EnumType.STRING) // Lưu dạng text, dễ đọc
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;

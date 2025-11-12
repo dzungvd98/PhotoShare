@@ -6,6 +6,7 @@ import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.repository.PhotoRepository;
 import com.dev.photoshare.service.PhotoFirstViewService.IPhotoFirstViewService;
+import com.dev.photoshare.service.UserStatsService.UserStatsService;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class PhotoService implements IPhotoService {
     private static final String UPLOAD_DIR = "upload/images/";
     private final PhotoRepository photoRepository;
+    private final UserStatsService userStatsService;
 
     @Transactional
     public long uploadPhoto(PhotoUploadRequest req, MultipartFile image) throws IOException {
@@ -52,6 +54,10 @@ public class PhotoService implements IPhotoService {
 
         Photos saved = photoRepository.save(photo);
         log.info("Photo saved with id {}", saved.getId());
+
+        Users creator = saved.getUser();
+        userStatsService.increasePostCount(creator);
+
         return saved.getId();
     }
 }
