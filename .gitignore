@@ -34,3 +34,5 @@ build/
 
 /init
 .env
+
+/upload
