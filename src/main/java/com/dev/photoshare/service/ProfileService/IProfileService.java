@@ -1,7 +1,10 @@
 package com.dev.photoshare.service.ProfileService;
 
+import com.dev.photoshare.dto.response.PageData;
+import com.dev.photoshare.dto.response.PhotoResponse;
 import com.dev.photoshare.dto.response.ProfileResponse;
 
 public interface IProfileService {
     ProfileResponse getUserProfileProfile(int userId);
+    PageData<PhotoResponse> getListPhotoPostedOfProfile(int userId, int pageNumber, int pageSize);
 }
