@@ -61,7 +61,28 @@ public class ProfileService implements IProfileService{
                         .photoUrl(photo.getUrl())
                         .photoId(photo.getId())
                         .description(photo.getDescription())
-                        .build()).collect(Collectors.toList());
+                        .build()).toList();
+
+        return PageData.<PhotoResponse>builder()
+                .contents(photoResponses)
+                .pageNumber(photoPage.getNumber() + 1)
+                .pageSize(photoPage.getSize())
+                .totalPages(photoPage.getTotalPages())
+                .totalElements(photoPage.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PageData<PhotoResponse> getListPhotoLikedOfProfile(int userId, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
+
+        Page<Photos> photoPage = photoRepository.findPhotosLikeByUser(userId, pageable);
+        List<PhotoResponse> photoResponses = photoPage.getContent().stream()
+                .map(photo -> PhotoResponse.builder()
+                        .photoUrl(photo.getUrl())
+                        .photoId(photo.getId())
+                        .description(photo.getDescription())
+                        .build()).toList();
 
         return PageData.<PhotoResponse>builder()
                 .contents(photoResponses)

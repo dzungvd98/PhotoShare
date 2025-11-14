@@ -31,4 +31,12 @@ public class ProfileController {
             @RequestParam(defaultValue = "10") int pageSize) {
         return ResponseEntity.ok(profileService.getListPhotoPostedOfProfile(userId, pageNum, pageSize));
     }
+
+    @GetMapping("/users/{userId}/liked")
+    public ResponseEntity<PageData<PhotoResponse>> getListLikedPhotosOfProfile(
+            @PathVariable int userId,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(profileService.getListPhotoLikedOfProfile(userId, pageNum, pageSize));
+    }
 }
