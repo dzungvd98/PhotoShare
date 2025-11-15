@@ -1,11 +1,12 @@
 package com.dev.photoshare.controller;
 
+import com.dev.photoshare.dto.request.EditProfileRequest;
+import com.dev.photoshare.dto.response.EditProfileResponse;
 import com.dev.photoshare.dto.response.PageData;
 import com.dev.photoshare.dto.response.PhotoResponse;
 import com.dev.photoshare.dto.response.ProfileResponse;
 import com.dev.photoshare.service.ProfileService.ProfileService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,5 +39,13 @@ public class ProfileController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
         return ResponseEntity.ok(profileService.getListPhotoLikedOfProfile(userId, pageNum, pageSize));
+    }
+
+    @PostMapping("/users/{userId}")
+    public ResponseEntity<EditProfileResponse>  editProfile(
+            @PathVariable int userId,
+            @RequestBody EditProfileRequest editProfileRequest
+    ) {
+        return  ResponseEntity.ok(profileService.editProfile(userId, editProfileRequest));
     }
 }

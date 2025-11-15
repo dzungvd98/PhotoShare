@@ -1,5 +1,7 @@
 package com.dev.photoshare.service.ProfileService;
 
+import com.dev.photoshare.dto.request.EditProfileRequest;
+import com.dev.photoshare.dto.response.EditProfileResponse;
 import com.dev.photoshare.dto.response.PageData;
 import com.dev.photoshare.dto.response.PhotoResponse;
 import com.dev.photoshare.dto.response.ProfileResponse;
@@ -9,6 +11,7 @@ import com.dev.photoshare.entity.UserStats;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.exception.UserNotFoundException;
 import com.dev.photoshare.repository.PhotoRepository;
+import com.dev.photoshare.repository.ProfileRepository;
 import com.dev.photoshare.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 public class ProfileService implements IProfileService{
     private final UserRepository userRepository;
     private final PhotoRepository photoRepository;
+    private final ProfileRepository profileRepository;
 
     @Override
     public ProfileResponse getUserProfileProfile(int userId) {
@@ -90,6 +95,35 @@ public class ProfileService implements IProfileService{
                 .pageSize(photoPage.getSize())
                 .totalPages(photoPage.getTotalPages())
                 .totalElements(photoPage.getTotalElements())
+                .build();
+    }
+
+    @Transactional
+    public EditProfileResponse editProfile(int userId, EditProfileRequest editProfileRequest) {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Profiles profile = user.getProfile();
+
+        if(!StringUtils.hasText(editProfileRequest.getDisplayName())) {
+            profile.setDisplayName(editProfileRequest.getDisplayName());
+        }
+
+        if(!StringUtils.hasText(editProfileRequest.getAvatarUrl())) {
+            profile.setAvatarUrl(editProfileRequest.getAvatarUrl());
+        }
+
+        if(!StringUtils.hasText(editProfileRequest.getBio())) {
+            profile.setBio(editProfileRequest.getBio());
+        }
+
+        Profiles savedProfile = profileRepository.save(profile);
+
+        return EditProfileResponse.builder()
+                .displayName(savedProfile.getDisplayName())
+                .bio(savedProfile.getBio())
+                .avatarUrl(savedProfile.getAvatarUrl())
+                .userId(userId)
                 .build();
     }
 }
