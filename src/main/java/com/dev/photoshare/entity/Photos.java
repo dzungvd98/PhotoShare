@@ -10,6 +10,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -68,4 +69,7 @@ public class Photos {
 
     @OneToOne(mappedBy = "photo", cascade = CascadeType.ALL, orphanRemoval = true)
     private PhotoStats stats;
+
+    @OneToMany(mappedBy = "photo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PhotoTags> photoTags;
 }

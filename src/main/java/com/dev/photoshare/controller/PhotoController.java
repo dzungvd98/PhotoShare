@@ -2,6 +2,8 @@ package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.ApiResponse;
+import com.dev.photoshare.dto.response.PhotoDetailResponse;
+import com.dev.photoshare.dto.response.PhotoResponse;
 import com.dev.photoshare.service.PhotoService.IPhotoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,5 +54,10 @@ public class PhotoController {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @GetMapping("/{photoId}")
+    public ResponseEntity<PhotoDetailResponse> getPhotoDetail(@PathVariable long photoId) {
+        return ResponseEntity.ok(photoService.getPhotoDetail(photoId));
     }
 }
