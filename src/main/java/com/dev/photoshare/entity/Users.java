@@ -73,4 +73,8 @@ public class Users {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public Users(int id) {
+        this.id = id;
+    }
 }

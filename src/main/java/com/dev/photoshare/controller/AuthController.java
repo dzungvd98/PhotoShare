@@ -1,8 +1,6 @@
 package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.LoginRequest;
-import com.dev.photoshare.dto.request.LogoutRequest;
-import com.dev.photoshare.dto.request.RefreshTokenRequest;
 import com.dev.photoshare.dto.request.RegisterRequest;
 import com.dev.photoshare.dto.response.AuthResponse;
 import com.dev.photoshare.dto.response.MessageResponse;
