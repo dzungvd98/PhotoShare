@@ -33,4 +33,23 @@ public class CommentStats {
 
     @UpdateTimestamp
     private LocalDateTime lastUpdated;
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    public void increaseReplyCount() {
+        this.replyCount++;
+    }
+
+    public void decreaseReplyCount() {
+        if (this.replyCount > 0) {
+            this.replyCount--;
+        }
+    }
 }

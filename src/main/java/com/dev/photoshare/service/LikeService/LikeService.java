@@ -7,6 +7,7 @@ import com.dev.photoshare.exception.UserNotFoundException;
 import com.dev.photoshare.repository.LikeRepository;
 import com.dev.photoshare.repository.PhotoStatsRepository;
 import com.dev.photoshare.repository.UserRepository;
+import com.dev.photoshare.utils.enums.LikeableType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,19 +22,25 @@ public class LikeService implements ILikeService {
     private final PhotoStatsRepository photoStatsRepository;
 
     @Transactional
-    public boolean toggleLike(int userId, long photoId) {
-        Likes existing = likeRepository.findByUserIdAndPhotoId(userId, photoId)
+    public boolean toggleLikePhoto(int userId, long likeableId, LikeableType likeableType) {
+        Likes existing = likeRepository.findByUserIdAndLikeableIdAndLikeableType(userId, likeableId, likeableType)
                 .orElse(null);
 
-        PhotoStats stats = photoStatsRepository.findByPhotoId(photoId)
-                .orElseThrow(() -> new EntityNotFoundException("PhotoStats not found!"));
-        if (existing == null) {
-            likePhoto(userId, photoId, stats);
+        if(likeableType.equals(LikeableType.PHOTO)) {
+            PhotoStats stats = photoStatsRepository.findByPhotoId(likeableId)
+                    .orElseThrow(() -> new EntityNotFoundException("PhotoStats not found!"));
+
+            if (existing == null) {
+                likePhoto(userId, likeableId, stats);
+                return true;
+            } else {
+                unlikePhoto(stats, existing);
+                return false;
+            }
+        } else if(likeableType.equals(LikeableType.COMMENT)) {
             return true;
-        } else {
-            unlikePhoto(stats, existing);
-            return false;
         }
+
     }
 
     private void likePhoto(int userId, long photoId, PhotoStats photoStats) {

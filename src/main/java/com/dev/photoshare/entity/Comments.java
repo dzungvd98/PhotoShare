@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "comments",
@@ -24,7 +25,7 @@ public class Comments {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "photo_id", nullable = false)
+    @JoinColumn(name = "photo_id")
     private Photos photo;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,6 +35,9 @@ public class Comments {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Comments parent; // For nested replies
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Comments> replies;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
