@@ -1,12 +1,8 @@
 package com.dev.photoshare.service.LikeService;
 
 import com.dev.photoshare.entity.Likes;
-import com.dev.photoshare.entity.PhotoStats;
 import com.dev.photoshare.entity.Users;
-import com.dev.photoshare.exception.UserNotFoundException;
-import com.dev.photoshare.repository.LikeRepository;
-import com.dev.photoshare.repository.PhotoStatsRepository;
-import com.dev.photoshare.repository.UserRepository;
+import com.dev.photoshare.repository.*;
 import com.dev.photoshare.utils.enums.LikeableType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -14,48 +10,71 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class LikeService implements ILikeService {
     private final LikeRepository likeRepository;
     private final PhotoStatsRepository photoStatsRepository;
+    private final CommentStatsRepository  commentStatsRepository;
 
     @Transactional
-    public boolean toggleLikePhoto(int userId, long likeableId, LikeableType likeableType) {
-        Likes existing = likeRepository.findByUserIdAndLikeableIdAndLikeableType(userId, likeableId, likeableType)
-                .orElse(null);
+    public boolean toggleLike(int userId, long likeableId, LikeableType likeableType) {
+        Likes existingLike = likeRepository.findByUserIdAndLikeableIdAndLikeableType(
+                userId, likeableId, likeableType
+        ).orElse(null);
 
-        if(likeableType.equals(LikeableType.PHOTO)) {
-            PhotoStats stats = photoStatsRepository.findByPhotoId(likeableId)
-                    .orElseThrow(() -> new EntityNotFoundException("PhotoStats not found!"));
+        boolean isLiked;
 
-            if (existing == null) {
-                likePhoto(userId, likeableId, stats);
-                return true;
-            } else {
-                unlikePhoto(stats, existing);
-                return false;
-            }
-        } else if(likeableType.equals(LikeableType.COMMENT)) {
-            return true;
+        if (likeableType == LikeableType.PHOTO) {
+            isLiked = handlePhotoLike(userId, likeableId, existingLike);
+        } else if (likeableType == LikeableType.COMMENT) {
+            isLiked = handleCommentLike(userId, likeableId, existingLike);
+        } else {
+            throw new IllegalArgumentException("Unsupported LikeableType: " + likeableType);
         }
 
+        return isLiked;
     }
 
-    private void likePhoto(int userId, long photoId, PhotoStats photoStats) {
+    private boolean handlePhotoLike(int userId, long photoId, Likes existingLike) {
+        if (!photoStatsRepository.existsByPhotoId(photoId)) {
+            throw new EntityNotFoundException("Photo not found with ID: " + photoId);
+        }
+
+        if (existingLike == null) {
+            saveLike(userId, photoId, LikeableType.PHOTO);
+            photoStatsRepository.incrementLikeCount(photoId);
+            return true;
+        } else {
+            likeRepository.delete(existingLike);
+            photoStatsRepository.decrementLikeCount(photoId);
+            return false;
+        }
+    }
+
+    private boolean handleCommentLike(int userId, long commentId, Likes existingLike) {
+        if(!commentStatsRepository.existsByCommentId(commentId)) {
+            throw new EntityNotFoundException("Comment not found with ID: " + commentId);
+        }
+
+        if(existingLike == null) {
+            saveLike(userId, commentId, LikeableType.COMMENT);
+            commentStatsRepository.incrementLikeCount(commentId);
+            return true;
+        } else {
+            likeRepository.delete(existingLike);
+            commentStatsRepository.decrementLikeCount(commentId);
+            return false;
+        }
+    }
+
+    private void saveLike(int userId, long likeableId, LikeableType type) {
         Likes like = new Likes();
         like.setUser(new Users(userId));
-        like.setLikeableType("Photo");
-        like.setLikeableId(photoId);
+        like.setLikeableType(type);
+        like.setLikeableId(likeableId);
         likeRepository.save(like);
-        photoStats.setLikeCount(photoStats.getLikeCount() + 1);
-        photoStatsRepository.save(photoStats);
-    }
-
-    private void unlikePhoto(PhotoStats photoStats, Likes like) {
-        likeRepository.delete(like);
-        photoStats.setLikeCount(photoStats.getLikeCount() - 1);
-        photoStatsRepository.save(photoStats);
     }
 }

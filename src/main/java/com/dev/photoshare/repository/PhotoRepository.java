@@ -12,9 +12,14 @@ import org.springframework.stereotype.Repository;
 public interface PhotoRepository extends JpaRepository<Photos,Long> {
     Page<Photos> findAllByUser_IdOrderByUpdatedAtDesc(Integer userId, Pageable pageable);
 
-    @Query("SELECT p " +
-            "FROM Photos p JOIN Likes l " +
-            "ON p.id = l.likeableId AND l.likeableType = 'photo'" +
-            "ORDER BY p.createdAt DESC")
+    @Query("""
+        SELECT p FROM Photos p 
+        JOIN Likes l 
+            ON p.id = l.likeableId 
+            AND l.likeableType = com.dev.photoshare.utils.enums.LikeableType.PHOTO
+        WHERE l.user.id = :userId
+        ORDER BY p.createdAt DESC
+    """)
     Page<Photos> findPhotosLikeByUser(@Param("userId") int userId, Pageable pageable);
+
 }

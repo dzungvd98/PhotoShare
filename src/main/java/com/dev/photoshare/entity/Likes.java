@@ -1,5 +1,6 @@
 package com.dev.photoshare.entity;
 
+import com.dev.photoshare.utils.enums.LikeableType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,7 +33,7 @@ public class Likes {
     private Users user;
 
     @Column(name = "likeable_type", nullable = false)
-    private String likeableType;
+    private LikeableType likeableType;
 
     @Column(name = "likeable_id", nullable = false)
     private Long likeableId;

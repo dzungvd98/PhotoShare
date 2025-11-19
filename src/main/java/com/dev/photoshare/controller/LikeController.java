@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.*;
 public class LikeController {
     private final ILikeService likeService;
 
-    @PostMapping("/photos/{photoId}")
-    public ResponseEntity<Boolean> toggleLike(@PathVariable long photoId,
+    @PostMapping
+    public ResponseEntity<Boolean> toggleLike(@RequestParam long targetId,
                                               @RequestParam LikeableType type) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         int userId = userDetails.getId();
-        return ResponseEntity.ok(likeService.toggleLikePhoto(userId, photoId, type));
+        return ResponseEntity.ok(likeService.toggleLike(userId, targetId, type));
     }
 }

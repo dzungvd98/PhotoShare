@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -37,7 +38,7 @@ public class Comments {
     private Comments parent; // For nested replies
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Comments> replies;
+    private List<Comments> replies = new ArrayList<>();
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
