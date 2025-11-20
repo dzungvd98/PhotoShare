@@ -9,4 +9,5 @@ import java.io.IOException;
 public interface IPhotoService {
     long uploadPhoto(PhotoUploadRequest photoUploadRequest,  MultipartFile image) throws IOException;
     PhotoDetailResponse getPhotoDetail(long photoId);
+    boolean reviewPhoto(long photoId, int modId);
 }

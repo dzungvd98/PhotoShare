@@ -100,4 +100,9 @@ public class PhotoService implements IPhotoService {
                 .ownerAvatar(creator.getProfile().getAvatarUrl())
                 .build();
     }
+
+    @Override
+    public boolean reviewPhoto(long photoId, int modId) {
+        return false;
+    }
 }
