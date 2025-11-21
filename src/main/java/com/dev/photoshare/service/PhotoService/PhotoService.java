@@ -3,6 +3,7 @@ package com.dev.photoshare.service.PhotoService;
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.PhotoDetailResponse;
 import com.dev.photoshare.dto.response.PhotoResponse;
+import com.dev.photoshare.dto.response.PhotoReviewResponse;
 import com.dev.photoshare.entity.PhotoStats;
 import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Tags;
@@ -56,16 +57,10 @@ public class PhotoService implements IPhotoService {
         photo.setFileSize(image.getSize());
         photo.setStatus(PhotoStatus.PENDING);
         photo.setModerationStatus(ModerationStatus.PENDING);
-
-        PhotoStats stats = new PhotoStats();
-        stats.setPhoto(photo);
-        photo.setStats(stats);
+        photo.setIsArchived(false);
 
         Photos saved = photoRepository.save(photo);
         log.info("Photo saved with id {}", saved.getId());
-
-        Users creator = saved.getUser();
-        userStatsService.increasePostCount(creator);
 
         return saved.getId();
     }
@@ -101,8 +96,62 @@ public class PhotoService implements IPhotoService {
                 .build();
     }
 
-    @Override
-    public boolean reviewPhoto(long photoId, int modId) {
-        return false;
+    @Transactional
+    public PhotoReviewResponse approvePhoto(long photoId, int modId) {
+        Photos photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new EntityNotFoundException("Not exist photo with id " + photoId));
+
+        ModerationStatus oldStatus = photo.getModerationStatus();
+        photo.setStatus(PhotoStatus.APPROVED);
+        photo.setModerationStatus(ModerationStatus.APPROVED);
+
+        PhotoStats stats = new PhotoStats();
+        stats.setPhoto(photo);
+        photo.setStats(stats);
+        photo.setIsArchived(true);
+
+        Users creator = photo.getUser();
+        userStatsService.increasePostCount(creator);
+
+        photo.setModeratedBy(new Users(modId));
+        photo.setModeratedAt(LocalDateTime.now());
+
+        photoRepository.save(photo);
+
+        return PhotoReviewResponse.builder()
+                .oldStatus(oldStatus)
+                .newStatus(ModerationStatus.APPROVED)
+                .message("Photo approved successfully!")
+                .moderatedAt(LocalDateTime.now())
+                .moderatedBy(modId)
+                .reason(null)
+                .photoId(photo.getId())
+                .build();
     }
+
+    @Override
+    public PhotoReviewResponse rejectPhoto(long photoId, int modId, String reason) {
+        Photos photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new EntityNotFoundException("Not exist photo with id " + photoId));
+        ModerationStatus oldStatus = photo.getModerationStatus();
+        photo.setStatus(PhotoStatus.REJECTED);
+        photo.setModerationStatus(ModerationStatus.REJECTED);
+
+        photo.setModeratedBy(new Users(modId));
+        photo.setModeratedAt(LocalDateTime.now());
+
+        photoRepository.save(photo);
+
+        return PhotoReviewResponse.builder()
+                .oldStatus(oldStatus)
+                .newStatus(ModerationStatus.REJECTED)
+                .message("Photo rejected!")
+                .moderatedAt(LocalDateTime.now())
+                .moderatedBy(modId)
+                .reason(reason)
+                .photoId(photo.getId())
+                .build();
+    }
+
+
 }

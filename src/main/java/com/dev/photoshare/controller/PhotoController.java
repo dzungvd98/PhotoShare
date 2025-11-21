@@ -1,9 +1,12 @@
 package com.dev.photoshare.controller;
 
+import com.dev.photoshare.dto.request.PhotoRejectRequest;
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.ApiResponse;
 import com.dev.photoshare.dto.response.PhotoDetailResponse;
 import com.dev.photoshare.dto.response.PhotoResponse;
+import com.dev.photoshare.dto.response.PhotoReviewResponse;
+import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.service.PhotoService.IPhotoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,5 +62,20 @@ public class PhotoController {
     @GetMapping("/{photoId}")
     public ResponseEntity<PhotoDetailResponse> getPhotoDetail(@PathVariable long photoId) {
         return ResponseEntity.ok(photoService.getPhotoDetail(photoId));
+    }
+
+
+    @PostMapping("/{photoId}")
+    public ResponseEntity<PhotoReviewResponse> rejectPhoto(@PathVariable long photoId,
+                                                           @RequestBody PhotoRejectRequest request) {
+
+        int modId = getUserIdFromToken();
+        return ResponseEntity.ok(photoService.rejectPhoto(photoId, modId, request.getReason()));
+    }
+
+    private int getUserIdFromToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getId();
     }
 }
