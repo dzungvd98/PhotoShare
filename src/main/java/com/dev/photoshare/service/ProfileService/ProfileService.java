@@ -1,10 +1,7 @@
 package com.dev.photoshare.service.ProfileService;
 
 import com.dev.photoshare.dto.request.EditProfileRequest;
-import com.dev.photoshare.dto.response.EditProfileResponse;
-import com.dev.photoshare.dto.response.PageData;
-import com.dev.photoshare.dto.response.PhotoResponse;
-import com.dev.photoshare.dto.response.ProfileResponse;
+import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Profiles;
 import com.dev.photoshare.entity.UserStats;
@@ -126,4 +123,6 @@ public class ProfileService implements IProfileService{
                 .userId(userId)
                 .build();
     }
+
+
 }

@@ -1,8 +1,13 @@
 package com.dev.photoshare.repository;
 
+import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.utils.enums.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -18,4 +23,9 @@ public interface UserRepository extends JpaRepository<Users,Integer> {
     Boolean existsByEmail(String email);
 
     Optional<Users> findByUsernameAndStatus(String username, UserStatus status);
+
+
+
+    @Query("SELECT u FROM Users u LEFT JOIN FETCH u.userStats")
+    Page<Users> findAllWithStats(Pageable pageable);
 }

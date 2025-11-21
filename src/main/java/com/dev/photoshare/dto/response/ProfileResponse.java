@@ -14,3 +14,5 @@ public class ProfileResponse {
     private String avatarUrl;
     private boolean isVerified;
 }
+
+

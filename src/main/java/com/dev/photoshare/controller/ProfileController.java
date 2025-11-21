@@ -1,10 +1,7 @@
 package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.EditProfileRequest;
-import com.dev.photoshare.dto.response.EditProfileResponse;
-import com.dev.photoshare.dto.response.PageData;
-import com.dev.photoshare.dto.response.PhotoResponse;
-import com.dev.photoshare.dto.response.ProfileResponse;
+import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.service.ProfileService.ProfileService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +9,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("api/profiles")
 @RequiredArgsConstructor
 @Tag(name = "Profile Controller", description = "Profile APIs")
 public class ProfileController {
     private final ProfileService profileService;
+
+
+
+
 
     @GetMapping("/users/{userId}")
     public ResponseEntity<ProfileResponse> getProfile(@PathVariable int userId) {
@@ -42,10 +44,12 @@ public class ProfileController {
     }
 
     @PostMapping("/users/{userId}")
-    public ResponseEntity<EditProfileResponse>  editProfile(
+    public ResponseEntity<EditProfileResponse> editProfile(
             @PathVariable int userId,
             @RequestBody EditProfileRequest editProfileRequest
     ) {
-        return  ResponseEntity.ok(profileService.editProfile(userId, editProfileRequest));
+        return ResponseEntity.ok(profileService.editProfile(userId, editProfileRequest));
     }
+
+
 }
