@@ -64,8 +64,13 @@ public class PhotoController {
         return ResponseEntity.ok(photoService.getPhotoDetail(photoId));
     }
 
+    @PostMapping("/{photoId}/approve")
+    public ResponseEntity<PhotoReviewResponse> approvePhoto(@PathVariable long photoId) {
+        int modId = getUserIdFromToken();
+        return ResponseEntity.ok(photoService.approvePhoto(photoId, modId));
+    }
 
-    @PostMapping("/{photoId}")
+    @PostMapping("/{photoId}/reject")
     public ResponseEntity<PhotoReviewResponse> rejectPhoto(@PathVariable long photoId,
                                                            @RequestBody PhotoRejectRequest request) {
 
