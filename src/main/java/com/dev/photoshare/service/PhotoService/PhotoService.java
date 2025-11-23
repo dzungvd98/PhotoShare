@@ -4,12 +4,11 @@ import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.PhotoDetailResponse;
 import com.dev.photoshare.dto.response.PhotoResponse;
 import com.dev.photoshare.dto.response.PhotoReviewResponse;
-import com.dev.photoshare.entity.PhotoStats;
-import com.dev.photoshare.entity.Photos;
-import com.dev.photoshare.entity.Tags;
-import com.dev.photoshare.entity.Users;
+import com.dev.photoshare.entity.*;
 import com.dev.photoshare.repository.PhotoRepository;
+import com.dev.photoshare.repository.PhotoTagRepository;
 import com.dev.photoshare.repository.TagRepository;
+import com.dev.photoshare.service.PhotoTagService.PhotoTagService;
 import com.dev.photoshare.service.UserStatsService.UserStatsService;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
@@ -39,6 +38,7 @@ public class PhotoService implements IPhotoService {
     private final PhotoRepository photoRepository;
     private final UserStatsService userStatsService;
     private final TagRepository tagRepository;
+    private final PhotoTagRepository  photoTagRepository;
 
     @Transactional
     public long uploadPhoto(PhotoUploadRequest req, MultipartFile image) throws IOException {
@@ -58,6 +58,8 @@ public class PhotoService implements IPhotoService {
         photo.setStatus(PhotoStatus.PENDING);
         photo.setModerationStatus(ModerationStatus.PENDING);
         photo.setIsArchived(false);
+
+        convertAndSavePhotoTag(req.getTags(), photo);
 
         Photos saved = photoRepository.save(photo);
         log.info("Photo saved with id {}", saved.getId());
@@ -151,6 +153,26 @@ public class PhotoService implements IPhotoService {
                 .reason(reason)
                 .photoId(photo.getId())
                 .build();
+    }
+
+    private void convertAndSavePhotoTag(List<String> tags, Photos photo) {
+        for (String tagName : tags) {
+
+            Tags tag = tagRepository.findByTagName(tagName)
+                    .orElseGet(() -> {
+                        Tags t = new Tags();
+                        t.setTagName(tagName);
+                        return tagRepository.save(t);
+                    });
+
+            tag.incrementUsage();
+
+            PhotoTags pt = new PhotoTags();
+            pt.setPhoto(photo);
+            pt.setTags(tag);
+
+            photoTagRepository.save(pt);
+        }
     }
 
 

@@ -31,7 +31,6 @@ public class Tags {
     @Column(unique = true, length = 200)
     private String slug;
 
-
     private long usageCount  = 0L;
 
     @Builder.Default
@@ -53,4 +52,6 @@ public class Tags {
             this.usageCount--;
         }
     }
+
+
 }

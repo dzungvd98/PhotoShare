@@ -7,10 +7,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TagRepository extends JpaRepository<Tags,Long> {
 
     @Query("SELECT t FROM Tags t JOIN t.photoTags pt WHERE pt.photo.id = :photoId")
     List<Tags> findAllByPhotoId(@Param("photoId") Long photoId);
+
+    Optional<Tags> findByTagName(String tagName);
 }
