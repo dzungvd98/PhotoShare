@@ -22,4 +22,8 @@ public interface PhotoStatsRepository extends JpaRepository<PhotoStats,Long> {
     @Modifying
     @Query("UPDATE PhotoStats p SET p.likeCount = p.likeCount - 1 WHERE p.photoId = :photoId")
     void decrementLikeCount(@Param("photoId") long photoId);
+
+    @Modifying
+    @Query("UPDATE PhotoStats ps SET ps.viewCount = ps.viewCount + :inc WHERE ps.photo.id = :id")
+    void incrementView(@Param("id") long photoId, @Param("inc") long inc);
 }
