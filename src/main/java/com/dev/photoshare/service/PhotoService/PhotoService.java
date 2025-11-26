@@ -2,15 +2,12 @@ package com.dev.photoshare.service.PhotoService;
 
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.PhotoDetailResponse;
-import com.dev.photoshare.dto.response.PhotoResponse;
 import com.dev.photoshare.dto.response.PhotoReviewResponse;
 import com.dev.photoshare.entity.*;
 import com.dev.photoshare.repository.PhotoRepository;
 import com.dev.photoshare.repository.PhotoTagRepository;
 import com.dev.photoshare.repository.TagRepository;
 import com.dev.photoshare.service.PhotoStatsService.IPhotoStatsService;
-import com.dev.photoshare.service.PhotoStatsService.PhotoStatsService;
-import com.dev.photoshare.service.PhotoTagService.PhotoTagService;
 import com.dev.photoshare.service.UserStatsService.UserStatsService;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
@@ -30,7 +27,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
