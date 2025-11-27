@@ -35,6 +35,23 @@ spring:
       password: ${SPRING_REDIS_PASSWORD:}
       timeout: 60000
 
+  mail:
+    host: ${MAIL_HOST:smtp-relay.brevo.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-brevo-email@example.com}
+    password: ${MAIL_PASSWORD:your-brevo-smtp-key}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    default-encoding: UTF-8
+    from: ${MAIL_FROM:noreply@yourdomain.com}
+
 jwt:
   access-token-expiration: 900000 # 15 minutes
   refresh-token-expiration: 2592000000 # 30 days
