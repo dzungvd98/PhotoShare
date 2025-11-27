@@ -6,7 +6,6 @@ import com.dev.photoshare.exception.TokenNotFoundException;
 import com.dev.photoshare.exception.TokenRefreshException;
 import com.dev.photoshare.repository.RefreshTokenRepository;
 import com.dev.photoshare.repository.UserRepository;
-import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
