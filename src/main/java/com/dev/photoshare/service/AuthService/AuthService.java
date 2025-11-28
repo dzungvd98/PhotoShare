@@ -15,7 +15,9 @@ import com.dev.photoshare.repository.RoleRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.security.JwtTokenProvider;
 import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
+import com.dev.photoshare.service.MailService.IMailService;
 import com.dev.photoshare.service.RefreshTokenService.IRefreshTokenService;
+import com.dev.photoshare.utils.OtpUtil;
 import com.dev.photoshare.utils.enums.UserStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +50,7 @@ public class AuthService implements IAuthService {
     private final IRefreshTokenService refreshTokenService;
     private final JwtBlacklistService jwtBlacklistService;
     private final ProfileRepository profileRepository;
+    private final IMailService  mailService;
 
     @Transactional
     public String register(RegisterRequest request) {
@@ -92,13 +95,11 @@ public class AuthService implements IAuthService {
 
         Users savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
-
-        // Auto login and generate tokens
-//        Authentication authentication = authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-//        );
-
+        mailService.sendSimpleEmail(request.getEmail(), "Register Successfully", OtpUtil.generateOtp());
+        // save to redis
         return String.format("User registered successfully: %s", savedUser.getUsername());
+
+
     }
 
     @Transactional
