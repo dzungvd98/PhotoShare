@@ -1,6 +1,5 @@
 package com.dev.photoshare.service.OtpService;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -24,10 +23,10 @@ public class OtpService implements IOtpService {
         return String.format("%06d", code);
     }
 
-    public String createOtp(String emailOrPhone) {
+    public String createOtp(String email) {
         String otp = generateOtp();
 
-        String key = "otp:" + emailOrPhone;   // key redis: otp:email
+        String key = "otp:" + email;   // key redis: otp:email
 
         redis.opsForValue().set(
                 key,
@@ -40,8 +39,8 @@ public class OtpService implements IOtpService {
     }
 
     // Xác nhận OTP
-    public boolean verifyOtp(String emailOrPhone, String inputOtp) {
-        String key = "otp:" + emailOrPhone;
+    public boolean verifyOtp(String email, String inputOtp) {
+        String key = "otp:" + email;
 
         String stored = redis.opsForValue().get(key);
         if (stored == null) return false;
