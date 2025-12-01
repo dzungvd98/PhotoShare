@@ -2,6 +2,7 @@ package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.LoginRequest;
 import com.dev.photoshare.dto.request.RegisterRequest;
+import com.dev.photoshare.dto.request.VerifyAccountRequest;
 import com.dev.photoshare.dto.response.AuthResponse;
 import com.dev.photoshare.dto.response.MessageResponse;
 import com.dev.photoshare.service.AuthService.IAuthService;
@@ -62,6 +63,12 @@ public class AuthController {
         String username = authentication.getName();
         MessageResponse response = authService.logoutAll(username);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    @Operation(summary = "Verify account after register")
+    public ResponseEntity<Boolean> verifyAccount(@Valid @RequestBody VerifyAccountRequest request) {
+        return ResponseEntity.ok(authService.verifyAccount(request.getEmail(), request.getOtp()));
     }
 
     private String getJwtFromRequest(HttpServletRequest request, String headerName) {

@@ -178,6 +178,10 @@ public class AuthService implements IAuthService {
         return new MessageResponse("Logged out from all devices");
     }
 
+    public boolean verifyAccount(String email, String otp) {
+        return  otpService.verifyOtp(email, otp);
+    }
+
     // Helper method to generate auth response
     private AuthResponse generateAuthResponse(Authentication authentication, Users user) {
 
