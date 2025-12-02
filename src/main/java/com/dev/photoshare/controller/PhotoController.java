@@ -2,10 +2,7 @@ package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.PhotoRejectRequest;
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
-import com.dev.photoshare.dto.response.ApiResponse;
-import com.dev.photoshare.dto.response.PhotoDetailResponse;
-import com.dev.photoshare.dto.response.PhotoResponse;
-import com.dev.photoshare.dto.response.PhotoReviewResponse;
+import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.service.PhotoService.IPhotoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -76,6 +73,13 @@ public class PhotoController {
 
         int modId = getUserIdFromToken();
         return ResponseEntity.ok(photoService.rejectPhoto(photoId, modId, request.getReason()));
+    }
+
+    @GetMapping("/pending-approval")
+    public ResponseEntity<PageData<AwaitingApprovalPhotoResponse>> getPendingApprovalPhoto(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(photoService.getListAwaitingApprovalPhoto(pageNum,  pageSize));
     }
 
     private int getUserIdFromToken() {

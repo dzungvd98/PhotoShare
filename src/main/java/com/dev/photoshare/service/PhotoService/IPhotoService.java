@@ -1,6 +1,8 @@
 package com.dev.photoshare.service.PhotoService;
 
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
+import com.dev.photoshare.dto.response.AwaitingApprovalPhotoResponse;
+import com.dev.photoshare.dto.response.PageData;
 import com.dev.photoshare.dto.response.PhotoDetailResponse;
 import com.dev.photoshare.dto.response.PhotoReviewResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,4 +14,5 @@ public interface IPhotoService {
     PhotoDetailResponse getPhotoDetail(long photoId);
     PhotoReviewResponse approvePhoto(long photoId, int modId);
     PhotoReviewResponse rejectPhoto(long photoId, int modId, String reason);
+    PageData<AwaitingApprovalPhotoResponse> getListAwaitingApprovalPhoto(int pageNumber, int pageSize);
 }
