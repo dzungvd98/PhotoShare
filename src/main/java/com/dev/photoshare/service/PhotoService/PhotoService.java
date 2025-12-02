@@ -1,6 +1,8 @@
 package com.dev.photoshare.service.PhotoService;
 
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
+import com.dev.photoshare.dto.response.AwaitingApprovalPhotoResponse;
+import com.dev.photoshare.dto.response.PageData;
 import com.dev.photoshare.dto.response.PhotoDetailResponse;
 import com.dev.photoshare.dto.response.PhotoReviewResponse;
 import com.dev.photoshare.entity.*;
@@ -14,6 +16,9 @@ import com.dev.photoshare.utils.enums.PhotoStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -151,6 +156,37 @@ public class PhotoService implements IPhotoService {
                 .moderatedBy(modId)
                 .reason(reason)
                 .photoId(photo.getId())
+                .build();
+    }
+
+    @Override
+    public PageData<AwaitingApprovalPhotoResponse> getListAwaitingApprovalPhoto(int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Photos> photoPage = photoRepository.findPhotosByModerationStatusOrderByUpdatedAtAsc(ModerationStatus.PENDING, pageable);
+
+        List<AwaitingApprovalPhotoResponse> photoResponses = photoPage.getContent().stream()
+                .map(photo -> AwaitingApprovalPhotoResponse.builder()
+                        .imgUrl(photo.getUrl())
+                        .uploadDate(photo.getCreatedAt())
+                        .tags(photo.getPhotoTags().stream()
+                                .map(pt -> pt.getTags().getTagName())
+                                .toList())
+                        .photoId(photo.getId())
+                        .ownerId(photo.getUser().getId())
+                        .creatorName(
+                                photo.getUser().getProfile().getDisplayName() != null
+                                        ? photo.getUser().getProfile().getDisplayName()
+                                        : photo.getUser().getUsername()
+                        )
+                        .build()).toList();
+
+        return PageData.<AwaitingApprovalPhotoResponse>builder()
+                .contents(photoResponses)
+                .pageNumber(photoPage.getNumber() + 1)
+                .pageSize(photoPage.getSize())
+                .totalPages(photoPage.getTotalPages())
+                .totalElements(photoPage.getTotalElements())
                 .build();
     }
 

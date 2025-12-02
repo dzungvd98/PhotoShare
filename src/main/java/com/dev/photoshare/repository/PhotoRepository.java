@@ -1,6 +1,7 @@
 package com.dev.photoshare.repository;
 
 import com.dev.photoshare.entity.Photos;
+import com.dev.photoshare.utils.enums.ModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,5 +28,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
 
     @Query("SELECT p.id FROM Photos p")
     List<Long> findAllPhotoIds();
+
+    Page<Photos> findPhotosByModerationStatusOrderByUpdatedAtAsc(ModerationStatus status, Pageable pageable);
 
 }
