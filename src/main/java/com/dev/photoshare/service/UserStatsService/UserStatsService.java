@@ -14,7 +14,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserStatsService implements IUserStatsService{
-    private final UserStatsRepository userStatsRepository;
     private final UserRepository userRepository;
 
     @Override

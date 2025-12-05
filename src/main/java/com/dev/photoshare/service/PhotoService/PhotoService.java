@@ -42,7 +42,6 @@ public class PhotoService implements IPhotoService {
     private final UserStatsService userStatsService;
     private final TagRepository tagRepository;
     private final PhotoTagRepository  photoTagRepository;
-    private final IPhotoStatsService  photoStatsService;
 
     @Transactional
     public long uploadPhoto(PhotoUploadRequest req, MultipartFile image) throws IOException {
