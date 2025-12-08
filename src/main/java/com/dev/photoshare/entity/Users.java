@@ -64,8 +64,26 @@ public class Users {
     @JoinColumn(name = "role_id", nullable = false)
     private Roles role;
 
+    @Column(nullable = false)
+    private Boolean mfaEnabled;
+
+    private String mfaSecret;
+
+    @Column(nullable = false)
+    private Integer failedLoginAttempts;
+
+    private LocalDateTime lockedUntil;
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+
+    private String lastLoginIp;
+
+    private LocalDateTime passwordChangedAt;
+
+    private LocalDateTime passwordExpiresAt;
+
+    private String emailVerificationToken;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -74,7 +92,30 @@ public class Users {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+
     public Users(int id) {
         this.id = id;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (failedLoginAttempts == null) {
+            failedLoginAttempts = 0;
+        }
+        if (mfaEnabled == null) {
+            mfaEnabled = false;
+        }
+
+        if (status == null) {
+            status = UserStatus.PENDING_VERIFICATION;
+        }
+    }
+
+    public boolean isAccountLocked() {
+        return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
+    }
+
+    public boolean isPasswordExpired() {
+        return passwordExpiresAt != null && passwordExpiresAt.isBefore(LocalDateTime.now());
     }
 }
