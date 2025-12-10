@@ -9,7 +9,6 @@ import com.dev.photoshare.entity.*;
 import com.dev.photoshare.repository.PhotoRepository;
 import com.dev.photoshare.repository.PhotoTagRepository;
 import com.dev.photoshare.repository.TagRepository;
-import com.dev.photoshare.service.PhotoStatsService.IPhotoStatsService;
 import com.dev.photoshare.service.UserStatsService.UserStatsService;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;

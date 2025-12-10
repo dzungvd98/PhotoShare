@@ -62,4 +62,5 @@ jwt:
 
 logging:
   level:
+    root: INFO
     com.dev.photoshare.security: DEBUG
