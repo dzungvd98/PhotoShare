@@ -31,18 +31,18 @@ public interface UserRepository extends JpaRepository<Users,Integer> {
 
     @Modifying
     @Query("UPDATE Users u SET u.failedLoginAttempts = u.failedLoginAttempts + 1, u.updatedAt = :now WHERE u.id = :userId")
-    void incrementFailedAttempts(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+    void incrementFailedAttempts(@Param("userId") Integer userId, @Param("now") LocalDateTime now);
 
     @Modifying
     @Query("UPDATE Users u SET u.failedLoginAttempts = 0, u.updatedAt = :now WHERE u.id = :userId")
-    void resetFailedAttempts(@Param("userId") Long userId, @Param("now") LocalDateTime now);
+    void resetFailedAttempts(@Param("userId") Integer userId, @Param("now") LocalDateTime now);
 
     @Modifying
     @Query("UPDATE Users u SET u.lockedUntil = :lockedUntil, u.status = 'ACTIVE', u.updatedAt = :now WHERE u.id = :userId")
-    void lockAccount(@Param("userId") Long userId, @Param("lockedUntil") LocalDateTime lockedUntil, @Param("now") LocalDateTime now);
+    void lockAccount(@Param("userId") Integer userId, @Param("lockedUntil") LocalDateTime lockedUntil, @Param("now") LocalDateTime now);
 
     @Modifying
     @Query("UPDATE Users u SET u.lastLogin = :loginTime, u.lastLoginIp = :ip, u.updatedAt = :now WHERE u.id = :userId")
-    void updateLastLogin(@Param("userId") Long userId, @Param("loginTime") LocalDateTime loginTime,
+    void updateLastLogin(@Param("userId") Integer userId, @Param("loginTime") LocalDateTime loginTime,
                          @Param("ip") String ip, @Param("now") LocalDateTime now);
 }
