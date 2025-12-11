@@ -2,7 +2,7 @@ package com.dev.photoshare.utils.enums;
 
 public enum UserStatus {
     ACTIVE,
-    SUSPENDED,
+    DISABLED,
     BANNED,
     PENDING_VERIFICATION
 }

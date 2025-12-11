@@ -1,5 +1,7 @@
 package com.dev.photoshare.exception;
 
+import lombok.Getter;
+
 @Getter
 public class AccountNotVerifiedException extends AuthException {
     private final String resendVerificationUrl;

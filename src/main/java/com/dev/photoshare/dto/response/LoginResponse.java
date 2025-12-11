@@ -24,11 +24,11 @@ public class LoginResponse {
     @Builder
     @Getter @Setter
     public static class UserInfo {
-        private Long id;
+        private Integer id;
         private String username;
         private String email;
         private String fullName;
-        private Set<String> roles;
+        private String role;
         private LocalDateTime lastLoginAt;
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 import static com.dev.photoshare.utils.enums.TokenType.ACCESS_TOKEN;
 import static com.dev.photoshare.utils.enums.TokenType.REFRESH_TOKEN;
@@ -78,6 +79,7 @@ public class JwtTokenProvider {
                 .setExpiration(expiryDate)
                 .claim("userId", userDetails.getId())
                 .claim("roles", userDetails.getAuthorities())
+                .setId(UUID.randomUUID().toString())
                 .signWith(getSigningKey(REFRESH_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }

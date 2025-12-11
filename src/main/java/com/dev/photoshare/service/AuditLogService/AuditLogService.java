@@ -18,7 +18,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuditLogService {
+public class AuditLogService implements IAuditLogService{
 
     private final AuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper;
@@ -53,7 +53,7 @@ public class AuditLogService {
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void logFailedAttempt(String username, Long userId, String ipAddress,
+    public void logFailedAttempt(String username, Integer userId, String ipAddress,
                                  String reason, LoginRequest.DeviceInfo deviceInfo) {
         try {
             Map<String, Object> details = new HashMap<>();
