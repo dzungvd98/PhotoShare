@@ -59,8 +59,29 @@ jwt:
     access: ${JWT_ACCESS_SECRET:0123456789abcdef0123456789abc2def}
     refresh: ${JWT_REFRESH_SECRET:012433456789absdfsdf456789abcdef}
 
+# Auth Configuration
+auth:
+  max-failed-attempts: 5
+  lock-duration-minutes: 30
+  password-expiry-days: 90
 
 logging:
   level:
     root: INFO
     com.dev.photoshare.security: DEBUG
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
