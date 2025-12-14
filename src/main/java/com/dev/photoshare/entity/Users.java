@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,12 +66,12 @@ public class Users {
     private Roles role;
 
     @Column(nullable = false)
-    private Boolean mfaEnabled;
+    private Boolean mfaEnabled = Boolean.FALSE;
 
     private String mfaSecret;
 
     @Column(nullable = false)
-    private Integer failedLoginAttempts;
+    private Integer failedLoginAttempts = 0;
 
     private LocalDateTime lockedUntil;
 
@@ -118,4 +119,14 @@ public class Users {
     public boolean isPasswordExpired() {
         return passwordExpiresAt != null && passwordExpiresAt.isBefore(LocalDateTime.now());
     }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
 }
+
+
+
+

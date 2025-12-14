@@ -2,8 +2,6 @@ package com.dev.photoshare.service.AuthService;
 
 
 import com.dev.photoshare.dto.request.LoginRequest;
-import com.dev.photoshare.dto.request.LogoutRequest;
-import com.dev.photoshare.dto.request.RefreshTokenRequest;
 import com.dev.photoshare.dto.request.RegisterRequest;
 import com.dev.photoshare.dto.response.AuthResponse;
 import com.dev.photoshare.dto.response.MessageResponse;
@@ -15,7 +13,6 @@ import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.security.JwtTokenProvider;
 import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
 import com.dev.photoshare.service.MailService.IMailService;
-import com.dev.photoshare.service.OtpService.IOtpService;
 import com.dev.photoshare.service.RefreshTokenService.IRefreshTokenService;
 import com.dev.photoshare.utils.enums.UserStatus;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,9 +43,7 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final IRefreshTokenService refreshTokenService;
-    private final JwtBlacklistService jwtBlacklistService;
     private final IMailService  mailService;
-    private final IOtpService  otpService;
 
     @Transactional
     public String register(RegisterRequest request) {
@@ -83,6 +78,7 @@ public class AuthService implements IAuthService {
                 .birthDate(request.getBirthDate())
                 .authProvider("local")
                 .status(UserStatus.ACTIVE)
+                .failedLoginAttempts(0)
                 .role(userRole)
                 .profile(profile)
                 .userStats(userStats)
@@ -94,13 +90,8 @@ public class AuthService implements IAuthService {
         Users savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
 
-        String otpGenerated  = otpService.createOtp(request.getEmail());
-
-        mailService.sendSimpleEmail(request.getEmail(), "Register Successfully", otpGenerated);
         // save to redis
         return String.format("User registered successfully: %s", savedUser.getUsername());
-
-
     }
 
     @Transactional
@@ -157,7 +148,6 @@ public class AuthService implements IAuthService {
 
     @Transactional
     public MessageResponse logout(String accessToken, String refreshToken) {
-        jwtBlacklistService.blacklistToken(accessToken);
         log.info("Add access token to blacklist for user: {}", accessToken);
 
         // Revoke refresh token
@@ -176,10 +166,6 @@ public class AuthService implements IAuthService {
         log.info("All tokens revoked for user: {}", username);
 
         return new MessageResponse("Logged out from all devices");
-    }
-
-    public boolean verifyAccount(String email, String otp) {
-        return  otpService.verifyOtp(email, otp);
     }
 
     // Helper method to generate auth response

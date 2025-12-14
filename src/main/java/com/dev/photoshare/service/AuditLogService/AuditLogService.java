@@ -63,7 +63,7 @@ public class AuditLogService implements IAuditLogService{
             }
 
             AuditLog auditLog = AuditLog.builder()
-                    .id(userId)
+                    .user(new Users(userId))
                     .username(username)
                     .eventType("LOGIN_FAILED")
                     .status("FAILED")

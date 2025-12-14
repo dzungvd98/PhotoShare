@@ -4,13 +4,18 @@ import com.dev.photoshare.dto.request.LoginRequest;
 import com.dev.photoshare.dto.request.RegisterRequest;
 import com.dev.photoshare.dto.request.VerifyAccountRequest;
 import com.dev.photoshare.dto.response.AuthResponse;
+import com.dev.photoshare.dto.response.LoginResponse;
 import com.dev.photoshare.dto.response.MessageResponse;
+import com.dev.photoshare.service.AuditLogService.AuditLogService;
 import com.dev.photoshare.service.AuthService.IAuthService;
+import com.dev.photoshare.service.RateLimiterService.RateLimiterService;
+import com.dev.photoshare.usecase.LoginUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,8 +27,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Authentication APIs")
+@Slf4j
 public class AuthController {
     private final IAuthService authService;
+    private final LoginUseCase loginUseCase;
+    private final RateLimiterService rateLimiterService;
+    private final AuditLogService auditLogService;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user")
@@ -65,11 +74,54 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    @Operation(summary = "Verify account after register")
-    public ResponseEntity<Boolean> verifyAccount(@Valid @RequestBody VerifyAccountRequest request) {
-        return ResponseEntity.ok(authService.verifyAccount(request.getEmail(), request.getOtp()));
+
+
+    @PostMapping("/loginn")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ipAddress = getClientIpAddress(httpRequest);
+        log.info("Login attempt for username: {} from IP: {}", request.getUsername(), ipAddress);
+
+        try {
+            // Check rate limit
+            rateLimiterService.checkRateLimit(request.getUsername(), ipAddress);
+
+            // Execute login
+            LoginResponse response = loginUseCase.execute(request, ipAddress);
+
+            // Reset rate limit on successful login
+            if (!response.isRequiresMfa()) {
+                rateLimiterService.resetRateLimit(request.getUsername(), ipAddress);
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Login failed for username: {}", request.getUsername(), e);
+            throw e;
+        }
     }
+
+    /**
+     * Extracts the real client IP address from the request
+     * Handles proxy headers like X-Forwarded-For
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
+    }
+
 
     private String getJwtFromRequest(HttpServletRequest request, String headerName) {
         String bearerToken = request.getHeader(headerName);

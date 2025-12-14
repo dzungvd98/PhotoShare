@@ -12,7 +12,5 @@ public interface IRefreshTokenService {
     RefreshToken verifyExpiration(RefreshToken token);
     void revokeToken(String token);
     void revokeAllUserTokens(Users user);
-    void deleteByToken(String token);
     RefreshToken rotateRefreshToken(RefreshToken oldToken, Authentication authentication, Users user);
-    public void cleanupExpiredTokens();
 }

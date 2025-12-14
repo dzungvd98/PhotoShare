@@ -51,7 +51,7 @@ public class TokenService implements ITokenService {
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiration))
                 .setId(UUID.randomUUID().toString())
-                .signWith(accessTokenSecret, SignatureAlgorithm.HS512)
+                .signWith(accessTokenSecret, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -69,7 +69,7 @@ public class TokenService implements ITokenService {
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiration))
                 .setId(UUID.randomUUID().toString())
-                .signWith(refreshTokenSecret, SignatureAlgorithm.HS512)
+                .signWith(refreshTokenSecret, SignatureAlgorithm.HS256)
                 .compact();
     }
 

@@ -4,7 +4,6 @@ import com.dev.photoshare.dto.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,32 +18,24 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String field = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            errors.put(field, message);
-        });
-
-        ErrorResponse error =  ErrorResponse.builder()
-                .errorCode(HttpStatus.BAD_REQUEST.name())
-                .message("Validation failed")
-                .timestamp(LocalDateTime.now())
-                .errors(errors)
-                .build();
-
-        return ResponseEntity.badRequest().body(error);
-    }
-
-    @ExceptionHandler({
-            InvalidCredentialsException.class,
-            BadCredentialsException.class
-    })
-    public ResponseEntity<ErrorResponse> handleInvalidCredentials(Exception ex) {
-        return buildErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
-    }
+//    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+//        Map<String, String> errors = new HashMap<>();
+//        ex.getBindingResult().getAllErrors().forEach(error -> {
+//            String field = ((FieldError) error).getField();
+//            String message = error.getDefaultMessage();
+//            errors.put(field, message);
+//        });
+//
+//        ErrorResponse error =  ErrorResponse.builder()
+//                .errorCode(HttpStatus.BAD_REQUEST.name())
+//                .message("Validation failed")
+//                .timestamp(LocalDateTime.now())
+//                .errors(errors)
+//                .build();
+//
+//        return ResponseEntity.badRequest().body(error);
+//    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
@@ -76,11 +67,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        return buildErrorResponse("An unexpected error occurred: " + ex.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+//        return buildErrorResponse("An unexpected error occurred: " + ex.getMessage(),
+//                HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
     @ExceptionHandler(IpRateLimitException.class)
     public ResponseEntity<ErrorResponse> handleIpRateLimit(IpRateLimitException ex) {
