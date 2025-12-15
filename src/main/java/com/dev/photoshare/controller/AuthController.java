@@ -6,6 +6,7 @@ import com.dev.photoshare.dto.request.VerifyAccountRequest;
 import com.dev.photoshare.dto.response.AuthResponse;
 import com.dev.photoshare.dto.response.LoginResponse;
 import com.dev.photoshare.dto.response.MessageResponse;
+import com.dev.photoshare.dto.response.VerifyAccountResponse;
 import com.dev.photoshare.service.AuditLogService.AuditLogService;
 import com.dev.photoshare.service.AuthService.IAuthService;
 import com.dev.photoshare.service.RateLimiterService.RateLimiterService;
@@ -22,6 +23,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("api/auth")
@@ -102,6 +105,12 @@ public class AuthController {
             log.error("Login failed for username: {}", request.getUsername(), e);
             throw e;
         }
+    }
+
+    @PostMapping("/verify-account")
+    public ResponseEntity<VerifyAccountResponse> verifyAccount(@Valid @RequestBody VerifyAccountRequest request) {
+        authService.verifyAccount(request.getEmail(), request.getOtp());
+        return ResponseEntity.ok(new VerifyAccountResponse("Account verified successfully", LocalDateTime.now()));
     }
 
     /**

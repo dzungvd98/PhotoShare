@@ -84,6 +84,8 @@ public class Users {
 
     private LocalDateTime passwordExpiresAt;
 
+    private boolean emailVerified = false;
+
     private String emailVerificationToken;
 
     @CreationTimestamp

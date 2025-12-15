@@ -45,4 +45,8 @@ public interface UserRepository extends JpaRepository<Users,Integer> {
     @Query("UPDATE Users u SET u.lastLogin = :loginTime, u.lastLoginIp = :ip, u.updatedAt = :now WHERE u.id = :userId")
     void updateLastLogin(@Param("userId") Integer userId, @Param("loginTime") LocalDateTime loginTime,
                          @Param("ip") String ip, @Param("now") LocalDateTime now);
+
+    @Modifying
+    @Query("UPDATE Users u SET u.emailVerified = true WHERE u.email = :email")
+    boolean emailVerified(@Param("email") String email);
 }

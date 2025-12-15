@@ -12,4 +12,5 @@ public interface IAuthService {
     AuthResponse refreshToken(String refreshToken, Authentication authentication);
     MessageResponse logout(String accessToken, String refreshToken);
     MessageResponse logoutAll(String username);
+    boolean verifyAccount(String email, String otp);
 }
