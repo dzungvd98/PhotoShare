@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
-import java.time.LocalDate;
-
 @Getter
 public class RegisterRequest {
     @NotBlank(message = "Username is required")
@@ -24,5 +22,4 @@ public class RegisterRequest {
     @Email(message = "Invalid email format")
     private String email;
 
-    private LocalDate birthDate;
 }

@@ -13,6 +13,7 @@ import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.security.JwtTokenProvider;
 import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
 import com.dev.photoshare.service.MailService.IMailService;
+import com.dev.photoshare.service.OtpService.IOtpService;
 import com.dev.photoshare.service.RefreshTokenService.IRefreshTokenService;
 import com.dev.photoshare.utils.enums.UserStatus;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,6 +45,7 @@ public class AuthService implements IAuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final IRefreshTokenService refreshTokenService;
     private final IMailService  mailService;
+    private final IOtpService otpService;
 
     @Transactional
     public String register(RegisterRequest request) {
@@ -75,13 +77,13 @@ public class AuthService implements IAuthService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
-                .birthDate(request.getBirthDate())
                 .authProvider("local")
                 .status(UserStatus.ACTIVE)
                 .failedLoginAttempts(0)
                 .role(userRole)
                 .profile(profile)
                 .userStats(userStats)
+                .emailVerified(false)
                 .build();
 
         profile.setUser(user);
@@ -89,6 +91,10 @@ public class AuthService implements IAuthService {
 
         Users savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
+
+
+        mailService.sendSimpleEmail(user.getEmail(), "Verify Account", "Your verify code is: " + otpService.createOtp(user.getEmail()));
+        log.info("Email verified is sent: {}", savedUser.getEmail());
 
         // save to redis
         return String.format("User registered successfully: %s", savedUser.getUsername());
@@ -166,6 +172,28 @@ public class AuthService implements IAuthService {
         log.info("All tokens revoked for user: {}", username);
 
         return new MessageResponse("Logged out from all devices");
+    }
+
+    @Override
+    public boolean verifyAccount(String email, String otp) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
+
+        if (user.isEmailVerified()) {
+            throw new BusinessException("Account already verified");
+        }
+
+        boolean verified = otpService.verifyOtp(email, otp);
+
+        if (!verified) {
+            log.warn("OTP verification failed for email={}", email);
+            throw new InvalidOtpException("Invalid or expired OTP");
+        }
+
+        userRepository.emailVerified(email);
+        log.info("Account verified successfully for email={}", email);
+
+        return true;
     }
 
     // Helper method to generate auth response
