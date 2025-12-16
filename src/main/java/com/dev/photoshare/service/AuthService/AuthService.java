@@ -78,12 +78,11 @@ public class AuthService implements IAuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .authProvider("local")
-                .status(UserStatus.ACTIVE)
+                .status(UserStatus.PENDING_VERIFICATION)
                 .failedLoginAttempts(0)
                 .role(userRole)
                 .profile(profile)
                 .userStats(userStats)
-                .emailVerified(false)
                 .build();
 
         profile.setUser(user);
@@ -179,7 +178,7 @@ public class AuthService implements IAuthService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
 
-        if (user.isEmailVerified()) {
+        if (user.getStatus() != UserStatus.PENDING_VERIFICATION) {
             throw new BusinessException("Account already verified");
         }
 
@@ -190,7 +189,7 @@ public class AuthService implements IAuthService {
             throw new InvalidOtpException("Invalid or expired OTP");
         }
 
-        userRepository.emailVerified(email);
+        userRepository.changeUserStatus(email, UserStatus.ACTIVE);
         log.info("Account verified successfully for email={}", email);
 
         return true;

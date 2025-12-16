@@ -1,6 +1,5 @@
 package com.dev.photoshare.repository;
 
-import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.utils.enums.UserStatus;
 import org.springframework.data.domain.Page;
@@ -47,6 +46,6 @@ public interface UserRepository extends JpaRepository<Users,Integer> {
                          @Param("ip") String ip, @Param("now") LocalDateTime now);
 
     @Modifying
-    @Query("UPDATE Users u SET u.emailVerified = true WHERE u.email = :email")
-    boolean emailVerified(@Param("email") String email);
+    @Query("UPDATE Users u SET u.status = :status WHERE u.email = :email")
+    void changeUserStatus(@Param("email") String email, @Param("status") UserStatus status);
 }
