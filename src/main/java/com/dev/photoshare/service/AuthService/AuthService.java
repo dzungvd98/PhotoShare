@@ -95,7 +95,6 @@ public class AuthService implements IAuthService {
         mailService.sendSimpleEmail(user.getEmail(), "Verify Account", "Your verify code is: " + otpService.createOtp(user.getEmail()));
         log.info("Email verified is sent: {}", savedUser.getEmail());
 
-        // save to redis
         return String.format("User registered successfully: %s", savedUser.getUsername());
     }
 
@@ -220,11 +219,4 @@ public class AuthService implements IAuthService {
                 .build();
     }
 
-    private String getTokenFromHeader(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith("Bearer ")) {
-            throw new TokenNotFoundException("No refresh token found in request headers!");
-        }
-        return bearerToken.substring(7);
-    }
 }
