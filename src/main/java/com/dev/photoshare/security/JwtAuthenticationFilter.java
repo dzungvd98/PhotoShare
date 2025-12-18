@@ -1,7 +1,7 @@
 package com.dev.photoshare.security;
 
-import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
-import com.dev.photoshare.utils.enums.TokenType;
+import com.dev.photoshare.service.TokenService.ITokenService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,71 +24,43 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider tokenProvider;
-    private final UserDetailsService userDetailsService;
-    private final JwtBlacklistService jwtBlacklistService;
+    private final ITokenService tokenProvider;
+    private final UserDetailsServiceImpl userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            String accessJwt = getJwtFromRequest(request, "Authorization-Access");
-            String refreshJwt = getJwtFromRequest(request, "Authorization-Refresh");
+            String token = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(accessJwt)) {
+            if (StringUtils.hasText(token)) {
 
-//                if (jwtBlacklistService.isTokenBlacklisted(accessJwt)) {
-//                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                    response.getWriter().write("This token has been blacklisted (logged out).");
-//                    return; // Dừng lại
-//                }
+                Claims claims = tokenProvider.validateAccessToken(token);
 
-                if (tokenProvider.validateToken(accessJwt, TokenType.ACCESS_TOKEN)) {
+                    Integer userId = tokenProvider.getUserIdFromToken(claims);
 
-                    String username = tokenProvider.getUsernameFromToken(accessJwt, TokenType.ACCESS_TOKEN);
-
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails = userDetailsService.loadUserById(userId);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Invalid access token");
-                    return;
-                }
             }
 
-            if (StringUtils.hasText(refreshJwt)) {
-
-                if (!tokenProvider.validateToken(refreshJwt, TokenType.REFRESH_TOKEN)) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Invalid refresh token");
-                    return;
-                } else {
-                    String username = tokenProvider.getUsernameFromToken(refreshJwt, TokenType.REFRESH_TOKEN);
-
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context", ex);
+            log.error("JWT authentication failed", ex);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromRequest(HttpServletRequest request, String headerName) {
-        String bearerToken = request.getHeader(headerName);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    private String getJwtFromRequest(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
         }
         return null;
     }

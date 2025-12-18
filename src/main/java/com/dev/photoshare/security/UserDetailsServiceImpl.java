@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 @Service
@@ -20,7 +21,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Users user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
@@ -36,6 +36,29 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .authorities(Collections.singletonList(
                         new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName().toUpperCase())
                 ))
+                .build();
+    }
+
+    public UserDetails loadUserById(int userId) throws UsernameNotFoundException {
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        if (!UserStatus.ACTIVE.equals(user.getStatus())) {
+            throw new UsernameNotFoundException("User account is not active");
+        }
+
+        return CustomUserDetails.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities(Collections.singletonList(
+                        new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName().toUpperCase())
+                ))
+                .enabled(user.getStatus() == UserStatus.ACTIVE)
+                .accountNonLocked(!user.isAccountLocked())
+                .accountNonExpired(true)
+                .credentialsNonExpired(user.getPasswordExpiresAt() == null
+                        || user.getPasswordExpiresAt().isAfter(LocalDateTime.now()))
                 .build();
     }
 }
