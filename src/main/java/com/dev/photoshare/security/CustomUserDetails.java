@@ -19,19 +19,23 @@ public class CustomUserDetails implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
     private boolean enabled;
 
+    private final boolean accountNonLocked;
+    private final boolean accountNonExpired;
+    private final boolean credentialsNonExpired;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isEnabled() { return enabled; }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() { return accountNonLocked; }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isAccountNonExpired() { return accountNonExpired; }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isCredentialsNonExpired() { return credentialsNonExpired; }
 }
