@@ -219,4 +219,25 @@ public class AuthService implements IAuthService {
                 .build();
     }
 
+    private void validateUserStatus(Users user) {
+        // Check if account is locked
+        if (user.isAccountLocked()) {
+            throw new AuthException("ACCOUNT_LOCKED", "Account is locked");
+        }
+
+        if (user.getStatus() == UserStatus.DISABLED) {
+            throw new AuthException("ACCOUNT_DISABLED", "Account has been disabled");
+        }
+
+        // Check if email is verified (optional, depends on requirements)
+        if (user.getStatus() == UserStatus.PENDING_VERIFICATION) {
+            throw new AuthException("EMAIL_NOT_VERIFIED", "Email verification required");
+        }
+
+        // Check password expiry
+        if (user.isPasswordExpired()) {
+            throw new AuthException("PASSWORD_EXPIRED", "Password has expired");
+        }
+    }
+
 }
