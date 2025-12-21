@@ -1,16 +1,15 @@
 package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.LoginRequest;
+import com.dev.photoshare.dto.request.RefreshTokenRequest;
 import com.dev.photoshare.dto.request.RegisterRequest;
 import com.dev.photoshare.dto.request.VerifyAccountRequest;
-import com.dev.photoshare.dto.response.AuthResponse;
-import com.dev.photoshare.dto.response.LoginResponse;
-import com.dev.photoshare.dto.response.MessageResponse;
-import com.dev.photoshare.dto.response.VerifyAccountResponse;
+import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.service.AuditLogService.AuditLogService;
 import com.dev.photoshare.service.AuthService.IAuthService;
 import com.dev.photoshare.service.RateLimiterService.RateLimiterService;
 import com.dev.photoshare.usecase.LoginUseCase;
+import com.dev.photoshare.usecase.RefreshTokenUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +35,7 @@ public class AuthController {
     private final LoginUseCase loginUseCase;
     private final RateLimiterService rateLimiterService;
     private final AuditLogService auditLogService;
+    private final RefreshTokenUseCase  refreshTokenUseCase;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user")
@@ -48,15 +48,6 @@ public class AuthController {
     @Operation(summary = "Login user")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/refresh")
-    @Operation(summary = "Refresh access token")
-    public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
-        String refreshToken = getJwtFromRequest(request, "Authorization-Refresh");
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        AuthResponse response = authService.refreshToken(refreshToken, authentication);
         return ResponseEntity.ok(response);
     }
 
@@ -76,8 +67,6 @@ public class AuthController {
         MessageResponse response = authService.logoutAll(username);
         return ResponseEntity.ok(response);
     }
-
-
 
     @PostMapping("/loginn")
     public ResponseEntity<LoginResponse> login(
@@ -129,6 +118,18 @@ public class AuthController {
         }
 
         return request.getRemoteAddr();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ipAddress = getClientIpAddress(httpRequest);
+        log.info("Token refresh attempt from IP: {}", ipAddress);
+
+        RefreshTokenResponse response = refreshTokenUseCase.execute(request, ipAddress);
+        return ResponseEntity.ok(response);
     }
 
 
