@@ -17,7 +17,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     Optional<Session> findByRefreshToken(String refreshToken);
 
     @Query("SELECT s FROM Session s WHERE s.user.id = :userId AND s.active = true AND s.status = 'ACTIVE'")
-    List<Session> findActiveSessionsByUserId(@Param("userId") Long userId);
+    List<Session> findActiveSessionsByUserId(@Param("userId") Integer userId);
 
     @Modifying
     @Query("UPDATE Session s SET s.active = false, s.status = 'REVOKED' WHERE s.id = :sessionId")
@@ -25,7 +25,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
     @Modifying
     @Query("UPDATE Session s SET s.active = false, s.status = 'REVOKED' WHERE s.user.id = :userId")
-    void revokeAllUserSessions(@Param("userId") Long userId);
+    void revokeAllUserSessions(@Param("userId") Integer userId);
 
     @Modifying
     @Query("UPDATE Session s SET s.lastAccessedAt = :accessTime WHERE s.id = :sessionId")
