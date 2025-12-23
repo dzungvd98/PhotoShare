@@ -4,7 +4,7 @@ import com.dev.photoshare.dto.response.FollowResponse;
 import com.dev.photoshare.entity.Follows;
 import com.dev.photoshare.entity.UserStats;
 import com.dev.photoshare.entity.Users;
-import com.dev.photoshare.exception.UserNotFoundException;
+import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.FollowRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.repository.UserStatsRepository;
@@ -31,7 +31,7 @@ public class FollowService implements IFollowService{
                 .getAuthentication().getPrincipal()).getId();
 
         Users target = userRepository.findByUsername(targetUsername)
-                .orElseThrow(() -> new UserNotFoundException("Target user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", targetUsername));
 
         Follows follow = followRepository.findByFollowerIdAndFollowedId(followerId, target.getId())
                 .orElse(new Follows());
@@ -69,7 +69,7 @@ public class FollowService implements IFollowService{
                 .getAuthentication().getPrincipal()).getId();
 
         Users target = userRepository.findByUsername(targetUsername)
-                .orElseThrow(() -> new UserNotFoundException("Target user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", targetUsername));
 
         Follows follow = followRepository.findByFollowerIdAndFollowedId(followerId, target.getId())
                 .orElseThrow(() -> new NoSuchElementException("Follow relationship not found"));
@@ -85,7 +85,7 @@ public class FollowService implements IFollowService{
     @Transactional
     public FollowResponse toggleFollow(String targetUsername) {
         Users target = userRepository.findByUsername(targetUsername)
-                .orElseThrow(() -> new UserNotFoundException("Target user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", targetUsername));
 
         Integer followerId = ((CustomUserDetails) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal()).getId();
@@ -124,7 +124,7 @@ public class FollowService implements IFollowService{
         if (increment) {
             if (userStatsRepository.incrementFollowingCount(followerId) == 0) {
                 Users follower = userRepository.findById(followerId)
-                        .orElseThrow(() -> new UserNotFoundException("User not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("User", "userId", followerId));
                 UserStats stats = new UserStats();
                 stats.setUser(follower);
                 stats.setFollowingCount(1);
@@ -132,7 +132,7 @@ public class FollowService implements IFollowService{
             }
             if (userStatsRepository.incrementFollowersCount(targetId) == 0) {
                 Users target = userRepository.findById(targetId)
-                        .orElseThrow(() -> new UserNotFoundException("User not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("User", "userId", followerId));
                 UserStats stats = new UserStats();
                 stats.setUser(target);
                 stats.setFollowersCount(1);

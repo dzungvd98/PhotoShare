@@ -52,13 +52,13 @@ public class AuthService implements IAuthService {
         log.info("Attempting to register user: {}", request.getUsername());
 
         // Validate username
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username already exists");
+        if (Boolean.TRUE.equals(userRepository.existsByUsername(request.getUsername()))) {
+            throw new DuplicateResourceException("User", "username", request.getUsername());
         }
 
         // Validate email
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException("Email already exists");
+        if (Boolean.TRUE.equals(userRepository.existsByEmail(request.getEmail()))) {
+            throw new DuplicateResourceException("User", "email", request.getEmail());
         }
 
         // Get default role
@@ -115,7 +115,11 @@ public class AuthService implements IAuthService {
 
             // Update last login
             Users user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+                    .orElseThrow(() ->  new ResourceNotFoundException(
+                                    "User",
+                                    "username",
+                                    request.getUsername()
+                            ));
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
 
@@ -132,7 +136,7 @@ public class AuthService implements IAuthService {
     @Transactional
     public AuthResponse refreshToken(String refreshToken, Authentication authentication) {
         RefreshToken oldToken = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> new TokenRefreshException(refreshToken, "Refresh token is not in database!"));
+                .orElseThrow(() -> new TokenRefreshException("Refresh token is not in database!"));
 
         refreshTokenService.verifyExpiration(oldToken); // nếu expired sẽ throw
 
@@ -164,7 +168,11 @@ public class AuthService implements IAuthService {
     @Transactional
     public MessageResponse logoutAll(String username) {
         Users user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() ->  new ResourceNotFoundException(
+                        "User",
+                        "username",
+                        username
+                ));
 
         refreshTokenService.revokeAllUserTokens(user);
         log.info("All tokens revoked for user: {}", username);
@@ -175,7 +183,11 @@ public class AuthService implements IAuthService {
     @Override
     public boolean verifyAccount(String email, String otp) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Not found user with email: " + email));
+                .orElseThrow(() ->  new ResourceNotFoundException(
+                        "User",
+                        "email",
+                        email
+                ));
 
         if (user.getStatus() != UserStatus.PENDING_VERIFICATION) {
             throw new BusinessException("Account already verified");

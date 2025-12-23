@@ -2,17 +2,17 @@ package com.dev.photoshare.exception;
 
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
-public class AccountLockedException extends AuthException {
-    private final LocalDateTime lockedUntil;
-    private final String reason;
-
+public class AccountLockedException extends BaseException {
     public AccountLockedException(LocalDateTime lockedUntil, String reason) {
-        super("ACCOUNT_LOCKED", "Account is locked until " + lockedUntil);
-        this.lockedUntil = lockedUntil;
-        this.reason = reason;
+        super( "Account is locked until " + lockedUntil, HttpStatus.FORBIDDEN, "ACCOUNT_LOCKED", Map.of(
+                "lockedUntil", lockedUntil.toString(),
+                "reason", reason
+        ));
     }
 }

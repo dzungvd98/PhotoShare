@@ -60,12 +60,12 @@ public class RefreshTokenService implements IRefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.isExpired()) {
             refreshTokenRepository.delete(token);
-            throw new TokenRefreshException(token.getToken(),
+            throw new TokenRefreshException(
                     "Refresh token was expired. Please make a new signin request");
         }
 
         if (token.getRevoked()) {
-            throw new TokenRefreshException(token.getToken(),
+            throw new TokenRefreshException(
                     "Refresh token was revoked. Please make a new signin request");
         }
 

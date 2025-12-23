@@ -2,7 +2,7 @@ package com.dev.photoshare.usecase;
 
 import com.dev.photoshare.entity.Session;
 import com.dev.photoshare.entity.Users;
-import com.dev.photoshare.exception.AuthException;
+import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.SessionRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.service.AuditLogService.IAuditLogService;
@@ -25,7 +25,7 @@ public class LogoutUseCase {
     @Transactional
     public void execute(Integer userId, String refreshToken, String ipAddress) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthException("USER_NOT_FOUND", "User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
 
         if (refreshToken != null && !refreshToken.isBlank()) {
             // Logout specific session
