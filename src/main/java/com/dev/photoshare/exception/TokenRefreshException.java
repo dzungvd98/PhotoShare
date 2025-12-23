@@ -1,7 +1,17 @@
 package com.dev.photoshare.exception;
 
-public class TokenRefreshException extends RuntimeException {
-    public TokenRefreshException(String token, String message) {
-        super(String.format("Failed for [%s]: %s", token, message));
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+public class TokenRefreshException extends BaseException {
+
+    public TokenRefreshException(String message) {
+        super(
+                message,
+                HttpStatus.UNAUTHORIZED,
+                "TOKEN_REFRESH_FAILED",
+                null
+        );
     }
 }

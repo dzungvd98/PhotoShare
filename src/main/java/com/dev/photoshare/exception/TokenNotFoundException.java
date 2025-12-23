@@ -1,7 +1,17 @@
 package com.dev.photoshare.exception;
 
-public class TokenNotFoundException extends RuntimeException{
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+public class TokenNotFoundException extends BaseException {
+
     public TokenNotFoundException(String message) {
-        super(message);
+        super(
+                message,
+                HttpStatus.UNAUTHORIZED,
+                "TOKEN_NOT_FOUND",
+                null
+        );
     }
 }

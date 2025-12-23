@@ -1,7 +1,16 @@
 package com.dev.photoshare.exception;
 
-public class InvalidOtpException extends RuntimeException {
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+public class InvalidOtpException extends BaseException {
+
     public InvalidOtpException(String message) {
-        super(message);
+        super(
+                message,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_OTP"
+        );
     }
 }

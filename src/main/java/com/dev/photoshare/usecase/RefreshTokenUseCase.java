@@ -4,7 +4,7 @@ import com.dev.photoshare.dto.request.RefreshTokenRequest;
 import com.dev.photoshare.dto.response.RefreshTokenResponse;
 import com.dev.photoshare.entity.Session;
 import com.dev.photoshare.entity.Users;
-import com.dev.photoshare.exception.AuthException;
+import com.dev.photoshare.exception.*;
 import com.dev.photoshare.repository.SessionRepository;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.service.AuditLogService.AuditLogService;
@@ -14,6 +14,7 @@ import com.dev.photoshare.utils.enums.UserStatus;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,7 @@ public class RefreshTokenUseCase {
     public RefreshTokenResponse execute(RefreshTokenRequest request, String ipAddress) {
         // 1. Validate refresh token format
         if (request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
-            throw new AuthException("INVALID_TOKEN", "Refresh token is required");
+            throw new ValidationException("refreshToken", "Refresh token is required");
         }
 
         // 2. Verify token signature and expiration
@@ -44,13 +45,14 @@ public class RefreshTokenUseCase {
         try {
             claims = tokenService.validateRefreshToken(request.getRefreshToken());
         } catch (Exception e) {
-            log.warn("Invalid refresh token: {}", e.getMessage());
-            throw new AuthException("INVALID_TOKEN", "Invalid or expired refresh token");
+            throw new TokenRefreshException(
+                    "Refresh token is invalid or expired"
+            );
         }
 
         // 3. Find session by refresh token
         Session session = sessionRepository.findByRefreshToken(request.getRefreshToken())
-                .orElseThrow(() -> new AuthException("SESSION_NOT_FOUND", "Session not found"));
+                .orElseThrow(() -> new TokenRefreshException("Refresh token is invalid or expired"));
 
         // 4. Validate session status
         if (!session.getActive() || session.getStatus() != SessionStatus.ACTIVE) {
@@ -60,7 +62,7 @@ public class RefreshTokenUseCase {
                     "FAILED",
                     Map.of("reason", "inactive_session")
             );
-            throw new AuthException("SESSION_INACTIVE", "Session is no longer active");
+            throw new SessionInactiveException();
         }
 
         // 5. Check if session is expired
@@ -72,7 +74,7 @@ public class RefreshTokenUseCase {
                     "FAILED",
                     Map.of("reason", "session_expired")
             );
-            throw new AuthException("SESSION_EXPIRED", "Session has expired");
+            throw new SessionExpiredException();
         }
 
         // 6. Get user and validate account status
@@ -115,22 +117,30 @@ public class RefreshTokenUseCase {
     private void validateUserStatus(Users user) {
         // Check if account is locked
         if (user.isAccountLocked()) {
-            throw new AuthException("ACCOUNT_LOCKED", "Account is locked");
+            throw new AccountLockedException(
+                    user.getLockedUntil(),
+                    "Account is locked"
+            );
         }
 
-        // Check if account is disabled
         if (user.getStatus() == UserStatus.DISABLED) {
-            throw new AuthException("ACCOUNT_DISABLED", "Account has been disabled");
+            throw new AccountDisabledException(
+                    "Account has been disabled"
+            );
         }
 
-        // Check if email is verified (optional, depends on requirements)
         if (user.getStatus() == UserStatus.PENDING_VERIFICATION) {
-            throw new AuthException("EMAIL_NOT_VERIFIED", "Email verification required");
+            throw new AccountNotVerifiedException(
+                    "Email verification required",
+                    "/api/auth/resend-verification"
+            );
         }
 
-        // Check password expiry
         if (user.isPasswordExpired()) {
-            throw new AuthException("PASSWORD_EXPIRED", "Password has expired");
+            throw new PasswordExpiredException(
+                    "Password has expired",
+                    "/api/auth/reset-password"
+            );
         }
     }
 }

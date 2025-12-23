@@ -1,7 +1,9 @@
 package com.dev.photoshare.exception;
 
-public class AccountDisabledException extends AuthException {
+import org.springframework.http.HttpStatus;
+
+public class AccountDisabledException extends BaseException {
     public AccountDisabledException(String message) {
-        super("ACCOUNT_DISABLED", message);
+        super(message, HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED");
     }
 }

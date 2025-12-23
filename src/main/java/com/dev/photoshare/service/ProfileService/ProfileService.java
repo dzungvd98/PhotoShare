@@ -6,7 +6,7 @@ import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Profiles;
 import com.dev.photoshare.entity.UserStats;
 import com.dev.photoshare.entity.Users;
-import com.dev.photoshare.exception.UserNotFoundException;
+import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.PhotoRepository;
 import com.dev.photoshare.repository.ProfileRepository;
 import com.dev.photoshare.repository.UserRepository;
@@ -32,7 +32,7 @@ public class ProfileService implements IProfileService{
     @Override
     public ProfileResponse getUserProfileProfile(int userId) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
 
         Profiles profile = user.getProfile();
         UserStats userStats = user.getUserStats();
@@ -97,7 +97,7 @@ public class ProfileService implements IProfileService{
     @Transactional
     public EditProfileResponse editProfile(int userId, EditProfileRequest editProfileRequest) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
 
         Profiles profile = user.getProfile();
 
