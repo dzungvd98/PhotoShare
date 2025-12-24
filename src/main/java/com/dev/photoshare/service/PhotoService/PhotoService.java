@@ -1,10 +1,7 @@
 package com.dev.photoshare.service.PhotoService;
 
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
-import com.dev.photoshare.dto.response.AwaitingApprovalPhotoResponse;
-import com.dev.photoshare.dto.response.PageData;
-import com.dev.photoshare.dto.response.PhotoDetailResponse;
-import com.dev.photoshare.dto.response.PhotoReviewResponse;
+import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.entity.*;
 import com.dev.photoshare.repository.PhotoRepository;
 import com.dev.photoshare.repository.PhotoTagRepository;
@@ -158,34 +155,30 @@ public class PhotoService implements IPhotoService {
     }
 
     @Override
-    public PageData<AwaitingApprovalPhotoResponse> getListAwaitingApprovalPhoto(int pageNumber, int pageSize) {
+    public PageResponse<AwaitingApprovalPhotoResponse> getListAwaitingApprovalPhoto(int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         Page<Photos> photoPage = photoRepository.findPhotosByModerationStatusOrderByUpdatedAtAsc(ModerationStatus.PENDING, pageable);
 
-        List<AwaitingApprovalPhotoResponse> photoResponses = photoPage.getContent().stream()
-                .map(photo -> AwaitingApprovalPhotoResponse.builder()
-                        .imgUrl(photo.getUrl())
-                        .uploadDate(photo.getCreatedAt())
-                        .tags(photo.getPhotoTags().stream()
-                                .map(pt -> pt.getTags().getTagName())
-                                .toList())
-                        .photoId(photo.getId())
-                        .ownerId(photo.getUser().getId())
-                        .creatorName(
-                                photo.getUser().getProfile().getDisplayName() != null
-                                        ? photo.getUser().getProfile().getDisplayName()
-                                        : photo.getUser().getUsername()
-                        )
-                        .build()).toList();
+        Page<AwaitingApprovalPhotoResponse> result = photoPage.map(this::mapToAwaitingApprovalPhoto);
 
-        return PageData.<AwaitingApprovalPhotoResponse>builder()
-                .contents(photoResponses)
-                .pageNumber(photoPage.getNumber() + 1)
-                .pageSize(photoPage.getSize())
-                .totalPages(photoPage.getTotalPages())
-                .totalElements(photoPage.getTotalElements())
-                .build();
+        return PageResponse.from(result);
+    }
+
+    private AwaitingApprovalPhotoResponse mapToAwaitingApprovalPhoto(Photos photo) {
+        return AwaitingApprovalPhotoResponse.builder()
+                .imgUrl(photo.getUrl())
+                .uploadDate(photo.getCreatedAt())
+                .tags(photo.getPhotoTags().stream()
+                        .map(pt -> pt.getTags().getTagName())
+                        .toList())
+                .photoId(photo.getId())
+                .ownerId(photo.getUser().getId())
+                .creatorName(
+                        photo.getUser().getProfile().getDisplayName() != null
+                                ? photo.getUser().getProfile().getDisplayName()
+                                : photo.getUser().getUsername()
+                ).build();
     }
 
     private void convertAndSavePhotoTag(List<String> tags, Photos photo) {

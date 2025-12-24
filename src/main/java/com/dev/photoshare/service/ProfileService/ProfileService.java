@@ -53,45 +53,23 @@ public class ProfileService implements IProfileService{
     }
 
     @Override
-    public PageData<PhotoResponse> getListPhotoPostedOfProfile(int userId, int pageNumber, int pageSize) {
+    public PageResponse<PhotoResponse> getListPhotoPostedOfProfile(int userId, int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
 
         Page<Photos> photoPage = photoRepository.findAllByUser_IdOrderByUpdatedAtDesc(userId, pageable);
-        List<PhotoResponse> photoResponses = photoPage.getContent().stream()
-                .map(photo -> PhotoResponse.builder()
-                        .photoUrl(photo.getUrl())
-                        .photoId(photo.getId())
-                        .description(photo.getDescription())
-                        .build()).toList();
+        Page<PhotoResponse> result = photoPage.map(this::mapToPostedOfProfile);
 
-        return PageData.<PhotoResponse>builder()
-                .contents(photoResponses)
-                .pageNumber(photoPage.getNumber() + 1)
-                .pageSize(photoPage.getSize())
-                .totalPages(photoPage.getTotalPages())
-                .totalElements(photoPage.getTotalElements())
-                .build();
+        return PageResponse.from(result);
     }
 
     @Override
-    public PageData<PhotoResponse> getListPhotoLikedOfProfile(int userId, int pageNumber, int pageSize) {
+    public PageResponse<PhotoResponse> getListPhotoLikedOfProfile(int userId, int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
 
         Page<Photos> photoPage = photoRepository.findPhotosLikeByUser(userId, pageable);
-        List<PhotoResponse> photoResponses = photoPage.getContent().stream()
-                .map(photo -> PhotoResponse.builder()
-                        .photoUrl(photo.getUrl())
-                        .photoId(photo.getId())
-                        .description(photo.getDescription())
-                        .build()).toList();
+        Page<PhotoResponse> result = photoPage.map(this::mapToPostedOfProfile);
 
-        return PageData.<PhotoResponse>builder()
-                .contents(photoResponses)
-                .pageNumber(photoPage.getNumber() + 1)
-                .pageSize(photoPage.getSize())
-                .totalPages(photoPage.getTotalPages())
-                .totalElements(photoPage.getTotalElements())
-                .build();
+        return PageResponse.from(result);
     }
 
     @Transactional
@@ -120,6 +98,14 @@ public class ProfileService implements IProfileService{
                 .bio(savedProfile.getBio())
                 .avatarUrl(savedProfile.getAvatarUrl())
                 .userId(userId)
+                .build();
+    }
+
+    private PhotoResponse mapToPostedOfProfile(Photos photo) {
+        return PhotoResponse.builder()
+                .photoUrl(photo.getUrl())
+                .photoId(photo.getId())
+                .description(photo.getDescription())
                 .build();
     }
 

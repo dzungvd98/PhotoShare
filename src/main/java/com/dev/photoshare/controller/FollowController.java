@@ -1,8 +1,10 @@
 package com.dev.photoshare.controller;
 
 
+import com.dev.photoshare.dto.response.ApiResponse;
 import com.dev.photoshare.dto.response.FollowResponse;
 import com.dev.photoshare.service.FollowService.IFollowService;
+import com.dev.photoshare.utils.ResponseEntityBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +20,9 @@ public class FollowController {
     private final IFollowService iFollowService;
 
     @PostMapping
-    public ResponseEntity<FollowResponse> toggleFollow(@RequestParam String targetUsername) {
+    public ResponseEntity<ApiResponse<FollowResponse>> toggleFollow(@RequestParam String targetUsername) {
         FollowResponse followResponse = iFollowService.toggleFollow(targetUsername);
-        return new ResponseEntity<>(followResponse, HttpStatus.OK);
+        return ResponseEntityBuilder.ok(followResponse);
     }
 }
 

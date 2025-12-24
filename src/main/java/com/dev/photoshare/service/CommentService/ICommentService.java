@@ -5,5 +5,5 @@ import com.dev.photoshare.dto.response.CommentResponse;
 
 public interface ICommentService {
     CommentResponse addComment(CommentRequest comment, long targetId, int userId);
-    Boolean deleteComment(long commentId, int userId);
+    void deleteComment(long commentId, int userId);
 }

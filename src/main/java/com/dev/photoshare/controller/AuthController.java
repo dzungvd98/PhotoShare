@@ -10,6 +10,7 @@ import com.dev.photoshare.service.AuthService.IAuthService;
 import com.dev.photoshare.service.RateLimiterService.RateLimiterService;
 import com.dev.photoshare.usecase.LoginUseCase;
 import com.dev.photoshare.usecase.RefreshTokenUseCase;
+import com.dev.photoshare.utils.ResponseEntityBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,7 +70,7 @@ public class AuthController {
     }
 
     @PostMapping("/loginn")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest) {
 
@@ -88,7 +89,7 @@ public class AuthController {
                 rateLimiterService.resetRateLimit(request.getUsername(), ipAddress);
             }
 
-            return ResponseEntity.ok(response);
+            return ResponseEntityBuilder.ok("Đăng nhập thành công",  response);
 
         } catch (Exception e) {
             log.error("Login failed for username: {}", request.getUsername(), e);
