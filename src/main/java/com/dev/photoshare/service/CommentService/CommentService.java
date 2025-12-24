@@ -76,7 +76,7 @@ public class CommentService implements ICommentService{
     }
 
     @Transactional
-    public Boolean deleteComment(long commentId, int userId) {
+    public void deleteComment(long commentId, int userId) {
         Comments existing = commentRepository.findById(commentId).orElseThrow(
                 () -> new EntityNotFoundException("Comments not found with id: " + commentId)
         );
@@ -91,13 +91,6 @@ public class CommentService implements ICommentService{
                 parent.getStats().decreaseReplyCount();
             }
         }
-
-        try {
-            commentRepository.delete(existing);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        commentRepository.delete(existing);
     }
 }

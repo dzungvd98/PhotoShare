@@ -87,10 +87,10 @@ public class LoginUseCase {
 
     private void validateInput(LoginRequest request) {
         if (request.getUsername() == null || request.getUsername().isBlank()) {
-            throw new ValidationException("Username is required");
+            throw new ValidationException("username", "Username is required");
         }
         if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new ValidationException("Password is required");
+            throw new ValidationException("password", "Password is required");
         }
     }
 

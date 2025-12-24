@@ -5,17 +5,21 @@ import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.service.PhotoService.IPhotoService;
+import com.dev.photoshare.utils.ResponseEntityBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
 
 @RestController
@@ -29,62 +33,51 @@ public class PhotoController {
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> uploadPhoto(
             @RequestPart("data") String photoData,
-            @RequestPart(value = "image", required = true) MultipartFile image) {
-    try {
+            @RequestPart(value = "image", required = true) MultipartFile image) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         PhotoUploadRequest request = objectMapper.readValue(photoData, PhotoUploadRequest.class);
 
         long idCreated = photoService.uploadPhoto(request, image);
-        ApiResponse<Long> response = ApiResponse.<Long>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("Photo uploaded successfully")
-                .data(idCreated)
-                .build();
-        URI location = URI.create("/api/photos/" + idCreated);
-        return ResponseEntity
-                .created(location) // tương đương status 201 + header Location
-                .body(response);
-    } catch (Exception e) {
-        log.error("Error uploading photo: {}", e.getMessage(), e); // ghi log nội bộ
+        return ResponseEntityBuilder.created("Tạo ảnh thành công", idCreated);
 
-        ApiResponse<Long> response = ApiResponse.<Long>builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("Failed to upload photo")
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
     }
 
     @GetMapping("/{photoId}")
-    public ResponseEntity<PhotoDetailResponse> getPhotoDetail(@PathVariable long photoId) {
-        return ResponseEntity.ok(photoService.getPhotoDetail(photoId));
+    public ResponseEntity<ApiResponse<PhotoDetailResponse>> getPhotoDetail(@PathVariable long photoId) {
+       return ResponseEntityBuilder.ok(photoService.getPhotoDetail(photoId));
     }
 
     @PostMapping("/{photoId}/approve")
-    public ResponseEntity<PhotoReviewResponse> approvePhoto(@PathVariable long photoId) {
+    public ResponseEntity<ApiResponse<PhotoReviewResponse>> approvePhoto(@PathVariable long photoId) {
         int modId = getUserIdFromToken();
-        return ResponseEntity.ok(photoService.approvePhoto(photoId, modId));
+        return ResponseEntityBuilder.ok("Ảnh đã được phê duyệt",photoService.approvePhoto(photoId, modId));
     }
 
     @PostMapping("/{photoId}/reject")
-    public ResponseEntity<PhotoReviewResponse> rejectPhoto(@PathVariable long photoId,
+    public ResponseEntity<ApiResponse<PhotoReviewResponse>> rejectPhoto(@PathVariable long photoId,
                                                            @RequestBody PhotoRejectRequest request) {
 
         int modId = getUserIdFromToken();
-        return ResponseEntity.ok(photoService.rejectPhoto(photoId, modId, request.getReason()));
+        return ResponseEntityBuilder.ok("Ảnh không được phê duyệt",photoService.rejectPhoto(photoId, modId, request.getReason()));
     }
 
     @GetMapping("/pending-approval")
-    public ResponseEntity<PageData<AwaitingApprovalPhotoResponse>> getPendingApprovalPhoto(
+    public ResponseEntity<ApiResponse<PageResponse<AwaitingApprovalPhotoResponse>>> getPendingApprovalPhoto(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
-        return ResponseEntity.ok(photoService.getListAwaitingApprovalPhoto(pageNum,  pageSize));
+        PageResponse<AwaitingApprovalPhotoResponse> pageResponse = photoService.getListAwaitingApprovalPhoto(pageNum,  pageSize);
+        return ResponseEntityBuilder.ok(String.format("Tìm thấy %d ảnh", pageResponse.getTotalElements()), pageResponse);
     }
 
     private int getUserIdFromToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()
+                || !(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("Không có quyền truy cập");
+        }
+
         return userDetails.getId();
     }
+
 }
