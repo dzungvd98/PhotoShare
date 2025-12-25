@@ -48,7 +48,7 @@ public class AuthService implements IAuthService {
     private final IOtpService otpService;
 
     @Transactional
-    public String register(RegisterRequest request) {
+    public UserResponse register(RegisterRequest request) {
         log.info("Attempting to register user: {}", request.getUsername());
 
         // Validate username
@@ -95,90 +95,12 @@ public class AuthService implements IAuthService {
         mailService.sendSimpleEmail(user.getEmail(), "Verify Account", "Your verify code is: " + otpService.createOtp(user.getEmail()));
         log.info("Email verified is sent: {}", savedUser.getEmail());
 
-        return String.format("User registered successfully: %s", savedUser.getUsername());
-    }
-
-    @Transactional
-    public AuthResponse login(LoginRequest request) {
-        log.info("Attempting login for user: {}", request.getUsername());
-
-        try {
-
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()
-                    )
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // Update last login
-            Users user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() ->  new ResourceNotFoundException(
-                                    "User",
-                                    "username",
-                                    request.getUsername()
-                            ));
-            user.setLastLogin(LocalDateTime.now());
-            userRepository.save(user);
-
-            log.info("User logged in successfully: {}", request.getUsername());
-
-            return generateAuthResponse(authentication, user);
-
-        } catch (AuthenticationException e) {
-            log.error("Login failed for user: {}", request.getUsername());
-            throw new InvalidCredentialsException("Invalid username or password");
-        }
-    }
-
-    @Transactional
-    public AuthResponse refreshToken(String refreshToken, Authentication authentication) {
-        RefreshToken oldToken = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> new TokenRefreshException("Refresh token is not in database!"));
-
-        refreshTokenService.verifyExpiration(oldToken); // nếu expired sẽ throw
-
-        RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(oldToken, authentication, oldToken.getUser());
-
-        // Tạo access token mới
-        String newAccessToken = jwtTokenProvider.generateToken(authentication, ACCESS_TOKEN);
-
-        log.info("Token refreshed successfully for user: {}", oldToken.getUser().getUsername());
-
-        return AuthResponse.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken.getToken())
-                .user(mapToUserResponse(oldToken.getUser()))
+        return UserResponse.builder()
+                .email(savedUser.getEmail())
+                .username(request.getUsername())
                 .build();
     }
 
-    @Transactional
-    public MessageResponse logout(String accessToken, String refreshToken) {
-        log.info("Add access token to blacklist for user: {}", accessToken);
-
-        // Revoke refresh token
-        refreshTokenService.revokeToken(refreshToken);
-        log.info("Refresh token revoked");
-
-        return new MessageResponse("Logout successful");
-    }
-
-    @Transactional
-    public MessageResponse logoutAll(String username) {
-        Users user = userRepository.findByUsername(username)
-                .orElseThrow(() ->  new ResourceNotFoundException(
-                        "User",
-                        "username",
-                        username
-                ));
-
-        refreshTokenService.revokeAllUserTokens(user);
-        log.info("All tokens revoked for user: {}", username);
-
-        return new MessageResponse("Logged out from all devices");
-    }
 
     @Override
     public boolean verifyAccount(String email, String otp) {
@@ -204,31 +126,6 @@ public class AuthService implements IAuthService {
         log.info("Account verified successfully for email={}", email);
 
         return true;
-    }
-
-    // Helper method to generate auth response
-    private AuthResponse generateAuthResponse(Authentication authentication, Users user) {
-
-        String accessToken = jwtTokenProvider.generateToken(authentication, ACCESS_TOKEN);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(authentication, user);
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .user(mapToUserResponse(user))
-                .build();
-    }
-
-    private UserResponse mapToUserResponse(Users user) {
-        return UserResponse.builder()
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .birthDate(user.getBirthDate())
-                .status(user.getStatus().toString())
-                .roleName(user.getRole().getRoleName())
-                .lastLogin(user.getLastLogin())
-                .build();
     }
 
 }

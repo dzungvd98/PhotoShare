@@ -22,7 +22,7 @@ public class Session {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true, length = 1000)
     private String refreshToken;
 
     @Column(nullable = false)
