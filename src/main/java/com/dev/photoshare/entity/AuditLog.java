@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "audit_logs", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_user_id_audit", columnList = "user_id"),
         @Index(name = "idx_created_at", columnList = "created_at"),
         @Index(name = "idx_event_type", columnList = "event_type")
 })

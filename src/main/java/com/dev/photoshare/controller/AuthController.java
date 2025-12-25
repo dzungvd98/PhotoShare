@@ -1,14 +1,13 @@
 package com.dev.photoshare.controller;
 
-import com.dev.photoshare.dto.request.LoginRequest;
-import com.dev.photoshare.dto.request.RefreshTokenRequest;
-import com.dev.photoshare.dto.request.RegisterRequest;
-import com.dev.photoshare.dto.request.VerifyAccountRequest;
+import com.dev.photoshare.dto.request.*;
 import com.dev.photoshare.dto.response.*;
+import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.service.AuditLogService.AuditLogService;
 import com.dev.photoshare.service.AuthService.IAuthService;
 import com.dev.photoshare.service.RateLimiterService.RateLimiterService;
 import com.dev.photoshare.usecase.LoginUseCase;
+import com.dev.photoshare.usecase.LogoutUseCase;
 import com.dev.photoshare.usecase.RefreshTokenUseCase;
 import com.dev.photoshare.utils.ResponseEntityBuilder;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -37,39 +37,27 @@ public class AuthController {
     private final RateLimiterService rateLimiterService;
     private final AuditLogService auditLogService;
     private final RefreshTokenUseCase  refreshTokenUseCase;
+    private final LogoutUseCase  logoutUseCase;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
-        String response = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponse response = authService.register(request);
+        return ResponseEntityBuilder.created("Tạo tài khoản thành công", response);
     }
 
-    @PostMapping("/login")
-    @Operation(summary = "Login user")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
-    }
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user")
-    public ResponseEntity<MessageResponse> logout(HttpServletRequest request) {
-        String refreshToken = getJwtFromRequest(request, "Authorization-Refresh");
-        String accessToken = getJwtFromRequest(request, "Authorization-Access");
-        MessageResponse response = authService.logout(accessToken, refreshToken);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Void> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest) {
+        int userId = getUserIdFromToken();
+        String ipAddress = getClientIpAddress(request);
+        logoutUseCase.execute(userId, logoutRequest.getRefreshToken(), ipAddress);
+        return ResponseEntityBuilder.noContent();
     }
 
-    @PostMapping("/logout-all")
-    @Operation(summary = "Logout from all devices")
-    public ResponseEntity<MessageResponse> logoutAll(Authentication authentication) {
-        String username = authentication.getName();
-        MessageResponse response = authService.logoutAll(username);
-        return ResponseEntity.ok(response);
-    }
 
-    @PostMapping("/loginn")
+    @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest) {
@@ -98,9 +86,31 @@ public class AuthController {
     }
 
     @PostMapping("/verify-account")
-    public ResponseEntity<VerifyAccountResponse> verifyAccount(@Valid @RequestBody VerifyAccountRequest request) {
+    public ResponseEntity<ApiResponse<Void>> verifyAccount(@Valid @RequestBody VerifyAccountRequest request) {
         authService.verifyAccount(request.getEmail(), request.getOtp());
-        return ResponseEntity.ok(new VerifyAccountResponse("Account verified successfully", LocalDateTime.now()));
+        return ResponseEntityBuilder.ok("Tài khoản đã được xác minh");
+    }
+
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ipAddress = getClientIpAddress(httpRequest);
+        log.info("Token refresh attempt from IP: {}", ipAddress);
+
+        RefreshTokenResponse response = refreshTokenUseCase.execute(request, ipAddress);
+        return ResponseEntityBuilder.ok(response);
+    }
+
+
+    private String getJwtFromRequest(HttpServletRequest request, String headerName) {
+        String bearerToken = request.getHeader(headerName);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     /**
@@ -121,25 +131,16 @@ public class AuthController {
         return request.getRemoteAddr();
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<RefreshTokenResponse> refreshToken(
-            @Valid @RequestBody RefreshTokenRequest request,
-            HttpServletRequest httpRequest) {
+    private int getUserIdFromToken() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        String ipAddress = getClientIpAddress(httpRequest);
-        log.info("Token refresh attempt from IP: {}", ipAddress);
-
-        RefreshTokenResponse response = refreshTokenUseCase.execute(request, ipAddress);
-        return ResponseEntity.ok(response);
-    }
-
-
-    private String getJwtFromRequest(HttpServletRequest request, String headerName) {
-        String bearerToken = request.getHeader(headerName);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        if (auth == null || !auth.isAuthenticated()
+                || !(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("Không có quyền truy cập");
         }
-        return null;
+
+        return userDetails.getId();
     }
+
 
 }
