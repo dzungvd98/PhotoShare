@@ -102,7 +102,7 @@ public class AuthService implements IAuthService {
     }
 
 
-    @Override
+    @Transactional
     public boolean verifyAccount(String email, String otp) {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() ->  new ResourceNotFoundException(
