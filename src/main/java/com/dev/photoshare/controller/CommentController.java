@@ -39,7 +39,6 @@ public class CommentController {
         return ResponseEntityBuilder.noContent();
     }
 
-
     private int getUserIdFromToken() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

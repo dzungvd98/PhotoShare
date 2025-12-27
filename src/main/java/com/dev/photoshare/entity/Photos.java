@@ -1,5 +1,6 @@
 package com.dev.photoshare.entity;
 
+import com.dev.photoshare.exception.BusinessException;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
 import jakarta.persistence.*;
@@ -32,6 +33,9 @@ public class Photos {
 
     @Column(nullable = false)
     private String url;
+
+    @Column(length = 255)
+    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -72,4 +76,16 @@ public class Photos {
 
     @OneToMany(mappedBy = "photo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PhotoTags> photoTags;
+
+    public void validateEditableBy(int userId) {
+        if (!this.user.getId().equals(userId)) {
+            throw new BusinessException("Chỉ tác giả mới có quyền chỉnh sửa");
+        }
+    }
+
+    public void validateUpdatableStatus() {
+        if (Boolean.TRUE.equals(this.isArchived)) {
+            throw new BusinessException("Ảnh đã bị xoá, không thể chỉnh sửa");
+        }
+    }
 }

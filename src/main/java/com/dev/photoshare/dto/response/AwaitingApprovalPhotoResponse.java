@@ -11,9 +11,12 @@ import java.util.List;
 public class AwaitingApprovalPhotoResponse {
     private int ownerId;
     private String creatorName;
+    private String creatorAvatar;
     private  long  photoId;
+    private String title;
     private String description;
     private List<String> tags;
     private LocalDateTime uploadDate;
     private String imgUrl;
+
 }

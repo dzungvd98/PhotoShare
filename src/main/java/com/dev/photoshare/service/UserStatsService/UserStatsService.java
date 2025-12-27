@@ -27,4 +27,16 @@ public class UserStatsService implements IUserStatsService{
         stats.setPostCount(stats.getPostCount() + 1);
         userRepository.save(user);
     }
+
+    @Override
+    public void decreasePostCount(Users user) {
+        UserStats stats = Optional.ofNullable(user.getUserStats())
+                .orElseGet(() -> {
+                    UserStats s = UserStats.builder().user(user).build();
+                    user.setUserStats(s);
+                    return s;
+                });
+        stats.setPostCount(stats.getPostCount() - 1);
+        userRepository.save(user);
+    }
 }

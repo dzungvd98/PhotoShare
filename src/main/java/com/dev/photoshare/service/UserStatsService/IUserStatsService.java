@@ -4,4 +4,5 @@ import com.dev.photoshare.entity.Users;
 
 public interface IUserStatsService {
     void increasePostCount(Users user);
+    void decreasePostCount(Users user);
 }

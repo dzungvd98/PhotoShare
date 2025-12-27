@@ -1,14 +1,17 @@
 package com.dev.photoshare.service.PhotoService;
 
+import com.dev.photoshare.dto.projection.PhotoFeedView;
+import com.dev.photoshare.dto.request.PhotoUpdateRequest;
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.entity.*;
-import com.dev.photoshare.repository.PhotoRepository;
-import com.dev.photoshare.repository.PhotoTagRepository;
-import com.dev.photoshare.repository.TagRepository;
+import com.dev.photoshare.exception.BusinessException;
+import com.dev.photoshare.exception.ResourceNotFoundException;
+import com.dev.photoshare.repository.*;
 import com.dev.photoshare.service.UserStatsService.UserStatsService;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
+import com.dev.photoshare.utils.enums.UserStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +29,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +40,6 @@ public class PhotoService implements IPhotoService {
     private final PhotoRepository photoRepository;
     private final UserStatsService userStatsService;
     private final TagRepository tagRepository;
-    private final PhotoTagRepository  photoTagRepository;
 
     @Transactional
     public long uploadPhoto(PhotoUploadRequest req, MultipartFile image) throws IOException {
@@ -66,10 +68,53 @@ public class PhotoService implements IPhotoService {
         return saved.getId();
     }
 
+    @Transactional
+    public PhotoResponse updatePhoto(int userId, long photoId, PhotoUpdateRequest request) {
+        Photos photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Photo", "id", photoId));
+
+        photo.validateEditableBy(userId);
+
+        photo.setTitle(request.getTitle());
+        photo.setDescription(request.getDescription());
+
+        if(photo.getModerationStatus() == ModerationStatus.APPROVED) {
+            Users creator = photo.getUser();
+            userStatsService.decreasePostCount(creator);
+        }
+
+
+        photo.setModerationStatus(ModerationStatus.PENDING);
+
+        if (request.getTags() != null) {
+            updatePhotoTags(photo, request.getTags());
+        }
+
+        return PhotoResponse.builder()
+                .photoId(photo.getId())
+                .photoUrl(photo.getUrl())
+                .description(photo.getDescription())
+                .title(photo.getTitle())
+                .build();
+    }
+
+    @Transactional
+    public void deletePhoto(long photoId, int userId) {
+        Photos photo = getAndValidatePhoto(photoId);
+        photo.validateEditableBy(userId);
+
+        if(photo.getModerationStatus() == ModerationStatus.APPROVED) {
+            Users creator = photo.getUser();
+            userStatsService.decreasePostCount(creator);
+        }
+
+        photo.setIsArchived(true);
+    }
+
     @Override
     public PhotoDetailResponse getPhotoDetail(long photoId) {
         Photos photo = photoRepository.findById(photoId)
-                .orElseThrow(() -> new EntityNotFoundException("Not exist photo with id " + photoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Photo", "id", photoId));
 
         Users creator = photo.getUser();
 
@@ -98,90 +143,101 @@ public class PhotoService implements IPhotoService {
     }
 
     @Transactional
-    public PhotoReviewResponse approvePhoto(long photoId, int modId) {
-        Photos photo = photoRepository.findById(photoId)
-                .orElseThrow(() -> new EntityNotFoundException("Not exist photo with id " + photoId));
+    public PhotoReviewResponse reviewPhoto(
+            long photoId,
+            int modId,
+            ModerationStatus targetStatus,
+            String reason
+    ) {
+
+        Photos photo = getAndValidatePhoto(photoId);
+
+        if (photo.getModerationStatus() != ModerationStatus.PENDING) {
+            throw new BusinessException("Ảnh đã được kiểm duyệt trước đó");
+        }
 
         ModerationStatus oldStatus = photo.getModerationStatus();
-        photo.setStatus(PhotoStatus.APPROVED);
-        photo.setModerationStatus(ModerationStatus.APPROVED);
 
-        PhotoStats stats = new PhotoStats();
-        stats.setPhoto(photo);
-        photo.setStats(stats);
-        photo.setIsArchived(true);
-
-        Users creator = photo.getUser();
-        userStatsService.increasePostCount(creator);
-
-        photo.setModeratedBy(new Users(modId));
-        photo.setModeratedAt(LocalDateTime.now());
+        switch (targetStatus) {
+            case APPROVED -> handleApprove(photo, modId);
+            case REJECTED -> handleReject(photo, modId, reason);
+            default -> throw new BusinessException("Trạng thái ảnh không hợp lệ");
+        }
 
         photoRepository.save(photo);
 
         return PhotoReviewResponse.builder()
-                .oldStatus(oldStatus)
-                .newStatus(ModerationStatus.APPROVED)
-                .message("Photo approved successfully!")
-                .moderatedAt(LocalDateTime.now())
-                .moderatedBy(modId)
-                .reason(null)
                 .photoId(photo.getId())
+                .oldStatus(oldStatus)
+                .newStatus(targetStatus)
+                .moderatedBy(modId)
+                .moderatedAt(photo.getModeratedAt())
+                .reason(targetStatus == ModerationStatus.REJECTED ? reason : null)
                 .build();
     }
 
-    @Override
-    public PhotoReviewResponse rejectPhoto(long photoId, int modId, String reason) {
-        Photos photo = photoRepository.findById(photoId)
-                .orElseThrow(() -> new EntityNotFoundException("Not exist photo with id " + photoId));
-        ModerationStatus oldStatus = photo.getModerationStatus();
-        photo.setStatus(PhotoStatus.REJECTED);
-        photo.setModerationStatus(ModerationStatus.REJECTED);
-
-        photo.setModeratedBy(new Users(modId));
-        photo.setModeratedAt(LocalDateTime.now());
-
-        photoRepository.save(photo);
-
-        return PhotoReviewResponse.builder()
-                .oldStatus(oldStatus)
-                .newStatus(ModerationStatus.REJECTED)
-                .message("Photo rejected!")
-                .moderatedAt(LocalDateTime.now())
-                .moderatedBy(modId)
-                .reason(reason)
-                .photoId(photo.getId())
-                .build();
-    }
 
     @Override
     public PageResponse<AwaitingApprovalPhotoResponse> getListAwaitingApprovalPhoto(int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        Page<Photos> photoPage = photoRepository.findPhotosByModerationStatusOrderByUpdatedAtAsc(ModerationStatus.PENDING, pageable);
+        Page<Photos> photoPage = photoRepository.findPendingPhotosByActiveUsers(ModerationStatus.PENDING, UserStatus.ACTIVE,  pageable);
 
         Page<AwaitingApprovalPhotoResponse> result = photoPage.map(this::mapToAwaitingApprovalPhoto);
 
         return PageResponse.from(result);
     }
 
+    @Override
+    public PageResponse<PhotoFeedView> getListPopularPhotos(int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<PhotoFeedView> popularPhotos = photoRepository.findPopularPhotos(pageable);
+
+        return PageResponse.from(popularPhotos);
+    }
+
+    @Override
+    public PageResponse<PhotoFeedView> getListFollowPhotos(int userId, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<PhotoFeedView> popularPhotos = photoRepository.findFollowedUsersPhotos(userId, pageable);
+
+        return PageResponse.from(popularPhotos);
+    }
+
+    @Override
+    public PageResponse<PhotoFeedView> getListNewPhotos(int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<PhotoFeedView> popularPhotos = photoRepository.findLatestPhotos(pageable);
+
+        return PageResponse.from(popularPhotos);
+    }
+
+
     private AwaitingApprovalPhotoResponse mapToAwaitingApprovalPhoto(Photos photo) {
         return AwaitingApprovalPhotoResponse.builder()
                 .imgUrl(photo.getUrl())
                 .uploadDate(photo.getCreatedAt())
+                .description(photo.getDescription())
+                .title(photo.getTitle())
                 .tags(photo.getPhotoTags().stream()
                         .map(pt -> pt.getTags().getTagName())
                         .toList())
                 .photoId(photo.getId())
                 .ownerId(photo.getUser().getId())
+                .creatorAvatar(photo.getUser().getProfile().getAvatarUrl())
                 .creatorName(
                         photo.getUser().getProfile().getDisplayName() != null
                                 ? photo.getUser().getProfile().getDisplayName()
                                 : photo.getUser().getUsername()
+
                 ).build();
     }
 
     private void convertAndSavePhotoTag(List<String> tags, Photos photo) {
+        List<PhotoTags> photoTagsList = new ArrayList<>();
         for (String tagName : tags) {
 
             Tags tag = tagRepository.findByTagName(tagName)
@@ -196,10 +252,86 @@ public class PhotoService implements IPhotoService {
             PhotoTags pt = new PhotoTags();
             pt.setPhoto(photo);
             pt.setTags(tag);
+            photoTagsList.add(pt);
+        }
+        photo.setPhotoTags(photoTagsList);
+    }
 
-            photoTagRepository.save(pt);
+    private void handleApprove(Photos photo, int modId) {
+        photo.setStatus(PhotoStatus.APPROVED);
+        photo.setModerationStatus(ModerationStatus.APPROVED);
+
+        if (photo.getStats() == null) {
+            PhotoStats stats = new PhotoStats();
+            stats.setPhoto(photo);
+            photo.setStats(stats);
+        }
+
+        photo.setIsArchived(true);
+
+        Users creator = photo.getUser();
+        userStatsService.increasePostCount(creator);
+
+        photo.setModeratedBy(new Users(modId));
+        photo.setModeratedAt(LocalDateTime.now());
+    }
+
+    private void handleReject(Photos photo, int modId, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessException("Reject reason is required");
+        }
+
+        photo.setStatus(PhotoStatus.REJECTED);
+        photo.setModerationStatus(ModerationStatus.REJECTED);
+        photo.setRejectionReason(reason);
+
+        photo.setModeratedBy(new Users(modId));
+        photo.setModeratedAt(LocalDateTime.now());
+    }
+
+    private void updatePhotoTags(Photos photo, List<String> newTagNames) {
+        List<PhotoTags> existingPhotoTags = new ArrayList<>(photo.getPhotoTags());
+
+        // Remove tags not in new list
+        existingPhotoTags.removeIf(pt -> {
+            boolean shouldRemove = !newTagNames.contains(pt.getTags().getTagName());
+            if (shouldRemove) {
+                photo.getPhotoTags().remove(pt);
+                pt.getTags().decrementUsage();
+            }
+            return shouldRemove;
+        });
+
+        // Add new tags
+        Set<String> existingTagNames = existingPhotoTags.stream()
+                .map(pt -> pt.getTags().getTagName())
+                .collect(Collectors.toSet());
+
+        for (String tagName : newTagNames) {
+            if (!existingTagNames.contains(tagName)) {
+                Tags tag = tagRepository.findByTagName(tagName)
+                        .orElseGet(() -> {
+                            Tags t = new Tags();
+                            t.setTagName(tagName);
+                            return tagRepository.save(t);
+                        });
+
+                PhotoTags photoTag = new PhotoTags();
+                photoTag.setPhoto(photo);
+                photoTag.setTags(tag);
+
+                photo.getPhotoTags().add(photoTag);
+                tag.incrementUsage();
+            }
         }
     }
 
+    private Photos getAndValidatePhoto(long photoId) {
+        Photos photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Photo", "id", photoId));
 
+        photo.validateUpdatableStatus();
+
+        return photo;
+    }
 }
