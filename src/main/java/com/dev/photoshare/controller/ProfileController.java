@@ -41,7 +41,7 @@ public class ProfileController {
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d ảnh", pageResponse.getTotalElements()), pageResponse);
     }
 
-    @PostMapping("/users/{userId}")
+    @PutMapping("/users/{userId}")
     public ResponseEntity<ApiResponse<EditProfileResponse>> editProfile(
             @PathVariable int userId,
             @RequestBody EditProfileRequest editProfileRequest

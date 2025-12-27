@@ -14,7 +14,5 @@ public class PhotoReviewResponse {
     private ModerationStatus newStatus;
     private int moderatedBy;
     private LocalDateTime moderatedAt;
-    private String message;
     private String reason;
-
 }

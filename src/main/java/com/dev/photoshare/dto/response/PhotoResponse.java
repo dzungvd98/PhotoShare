@@ -7,6 +7,7 @@ import lombok.Getter;
 @Builder
 public class PhotoResponse {
     private long photoId;
+    private String title;
     private String description;
     private String photoUrl;
 }

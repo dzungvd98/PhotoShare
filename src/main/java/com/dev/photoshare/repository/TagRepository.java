@@ -16,4 +16,5 @@ public interface TagRepository extends JpaRepository<Tags,Long> {
     List<Tags> findAllByPhotoId(@Param("photoId") Long photoId);
 
     Optional<Tags> findByTagName(String tagName);
+
 }
