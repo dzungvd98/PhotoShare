@@ -2,12 +2,16 @@ package com.dev.photoshare.usecase;
 
 import com.dev.photoshare.dto.request.LoginRequest;
 import com.dev.photoshare.dto.response.LoginResponse;
+import com.dev.photoshare.dto.utils.LoginResult;
 import com.dev.photoshare.entity.Session;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.exception.*;
 import com.dev.photoshare.repository.SessionRepository;
 import com.dev.photoshare.repository.UserRepository;
+import com.dev.photoshare.security.refresh.RefreshTokenGenerator;
+import com.dev.photoshare.security.refresh.TokenHmacUtils;
 import com.dev.photoshare.service.AuditLogService.IAuditLogService;
+import com.dev.photoshare.service.MailService.IMailService;
 import com.dev.photoshare.service.PasswordService.IPasswordService;
 import com.dev.photoshare.service.TokenService.ITokenService;
 import com.dev.photoshare.utils.enums.SessionStatus;
@@ -18,7 +22,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +39,9 @@ public class LoginUseCase {
     private final IPasswordService passwordService;
     private final ITokenService tokenService;
     private final IAuditLogService auditLogService;
+    private final RefreshTokenGenerator refreshTokenGenerator;
+    private final TokenHmacUtils  tokenHmacUtils;
+    private final IMailService mailService;
 
     @Value("${auth.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -44,7 +53,7 @@ public class LoginUseCase {
     private int passwordExpiryDays;
 
     @Transactional
-    public LoginResponse execute(LoginRequest request, String ipAddress) {
+    public LoginResult execute(LoginRequest request, String ipAddress) {
         // 1. Validate Input
         validateInput(request);
 
@@ -175,18 +184,15 @@ public class LoginUseCase {
         }
     }
 
-    private LoginResponse handleMfaRequired(Users user, String ipAddress,
+    private LoginResult handleMfaRequired(Users user, String ipAddress,
                                             LoginRequest.DeviceInfo deviceInfo) {
         // Create pending session
         String mfaChallengeId = java.util.UUID.randomUUID().toString();
-        String tempToken = tokenService.generateAccessToken(
-                user.getId(),
-                Set.of("ROLE_MFA_PENDING").toString()
-        );
+        String tempToken = refreshTokenGenerator.generate();
 
         Session pendingSession = Session.builder()
                 .user(user)
-                .refreshToken(tempToken)
+                .refreshToken(tokenHmacUtils.hmac(tempToken))
                 .expiresAt(LocalDateTime.now().plusMinutes(10))
                 .status(SessionStatus.PENDING_MFA)
                 .mfaChallengeId(mfaChallengeId)
@@ -202,25 +208,30 @@ public class LoginUseCase {
 
         auditLogService.logMfaRequired(user, ipAddress, deviceInfo);
 
-        return LoginResponse.builder()
+        LoginResponse loginResponse =  LoginResponse.builder()
                 .requiresMfa(true)
-                .sessionToken(tempToken)
                 .mfaMethods(List.of("TOTP", "SMS"))
+                .build();
+
+        return LoginResult.builder()
+                .refreshToken(tempToken)
+                .loginResponse(loginResponse)
                 .build();
     }
 
-    private LoginResponse handleSuccessfulLogin(Users user, String ipAddress,
+    private LoginResult handleSuccessfulLogin(Users user, String ipAddress,
                                                 LoginRequest.DeviceInfo deviceInfo) {
         // Generate tokens
         String role = user.getRole().getRoleName();
 
         String accessToken = tokenService.generateAccessToken(user.getId(), role);
-        String refreshToken = tokenService.generateRefreshToken(user.getId());
+        String refreshToken = refreshTokenGenerator.generate();
+
 
         // Create session
         Session session = Session.builder()
                 .user(user)
-                .refreshToken(refreshToken)
+                .refreshToken(tokenHmacUtils.hmac(refreshToken))
                 .expiresAt(LocalDateTime.now().plusDays(30))
                 .status(SessionStatus.ACTIVE)
                 .ipAddress(ipAddress)
@@ -248,10 +259,9 @@ public class LoginUseCase {
         checkSecurityAlerts(user, ipAddress, deviceInfo);
 
         // Build response
-        return LoginResponse.builder()
+        LoginResponse loginResponse =  LoginResponse.builder()
                 .requiresMfa(false)
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(tokenService.getAccessTokenExpiration())
                 .user(LoginResponse.UserInfo.builder()
@@ -262,6 +272,11 @@ public class LoginUseCase {
                         .role(role)
                         .lastLoginAt(user.getLastLogin())
                         .build())
+                .build();
+
+        return LoginResult.builder()
+                .loginResponse(loginResponse)
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -275,6 +290,7 @@ public class LoginUseCase {
             log.info("New device/location detected for user: {}", user.getUsername());
             // Here you would send a security notification email/push
             // emailService.sendSecurityAlert(user, ipAddress, deviceInfo);
+            mailService.sendSimpleEmail(user.getEmail(), "Phát hiện đăng nhập bất thường", "Phát hiện lượt đăng nhập bất thường trên thiết bị " + deviceInfo.getDeviceName() +  ". Nếu không phải bạn vui lòng đổi mật khẩu để đảm bảo an toàn!");
         }
     }
 }

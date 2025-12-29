@@ -23,8 +23,6 @@ public class JwtTokenProvider {
     @Value("${jwt.secret.access}")
     private String accessSecret;
 
-    @Value("${jwt.secret.refresh}")
-    private String refreshSecret;
 
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpirationMs;
@@ -35,7 +33,6 @@ public class JwtTokenProvider {
     private Key getSigningKey(TokenType type) {
         String secret = switch (type) {
             case ACCESS_TOKEN -> accessSecret;
-            case REFRESH_TOKEN -> refreshSecret;
             default -> throw new IllegalArgumentException("Invalid token type");
         };
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

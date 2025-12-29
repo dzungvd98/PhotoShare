@@ -18,7 +18,6 @@ import java.util.UUID;
 public class TokenService implements ITokenService {
 
     private final SecretKey accessTokenSecret;
-    private final SecretKey refreshTokenSecret;
 
     @Value("${jwt.access-token-expiration}")// 1 hour default
     private long accessTokenExpiration;
@@ -30,10 +29,8 @@ public class TokenService implements ITokenService {
     private String issuer;
 
     public TokenService(
-            @Value("${jwt.secret.access}") String accessSecret,
-            @Value("${jwt.secret.refresh}") String refreshSecret) {
+            @Value("${jwt.secret.access}") String accessSecret) {
         this.accessTokenSecret = Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
-        this.refreshTokenSecret = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -56,24 +53,6 @@ public class TokenService implements ITokenService {
     }
 
     /**
-     * Generates a refresh token
-     */
-    public String generateRefreshToken(Integer userId) {
-        Instant now = Instant.now();
-        Instant expiration = now.plus(refreshTokenExpiration, ChronoUnit.SECONDS);
-
-        return Jwts.builder()
-                .setSubject(userId.toString())
-                .claim("type", "refresh")
-                .setIssuer(issuer)
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(expiration))
-                .setId(UUID.randomUUID().toString())
-                .signWith(refreshTokenSecret, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    /**
      * Validates and parses an access token
      */
     public Claims validateAccessToken(String token) {
@@ -92,24 +71,6 @@ public class TokenService implements ITokenService {
         }
     }
 
-    /**
-     * Validates and parses a refresh token
-     */
-    public Claims validateRefreshToken(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(refreshTokenSecret)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            log.warn("Refresh token expired: {}", e.getMessage());
-            throw e;
-        } catch (JwtException e) {
-            log.error("Invalid refresh token: {}", e.getMessage());
-            throw e;
-        }
-    }
 
     /**
      * Extracts user ID from token

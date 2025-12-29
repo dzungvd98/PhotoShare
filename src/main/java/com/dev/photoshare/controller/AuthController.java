@@ -2,7 +2,10 @@ package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.*;
 import com.dev.photoshare.dto.response.*;
+import com.dev.photoshare.dto.utils.LoginResult;
+import com.dev.photoshare.dto.utils.RefreshResult;
 import com.dev.photoshare.security.CustomUserDetails;
+import com.dev.photoshare.security.refresh.CookieUtils;
 import com.dev.photoshare.service.AuditLogService.AuditLogService;
 import com.dev.photoshare.service.AuthService.IAuthService;
 import com.dev.photoshare.service.RateLimiterService.RateLimiterService;
@@ -16,7 +19,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -38,6 +43,7 @@ public class AuthController {
     private final AuditLogService auditLogService;
     private final RefreshTokenUseCase  refreshTokenUseCase;
     private final LogoutUseCase  logoutUseCase;
+    private final CookieUtils  cookieUtils;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user")
@@ -70,14 +76,17 @@ public class AuthController {
             rateLimiterService.checkRateLimit(request.getUsername(), ipAddress);
 
             // Execute login
-            LoginResponse response = loginUseCase.execute(request, ipAddress);
+            LoginResult result = loginUseCase.execute(request, ipAddress);
+
+            ResponseCookie cookie = cookieUtils.refreshTokenCookie(
+                    result.getRefreshToken());
 
             // Reset rate limit on successful login
-            if (!response.isRequiresMfa()) {
+            if (!result.getLoginResponse().isRequiresMfa()) {
                 rateLimiterService.resetRateLimit(request.getUsername(), ipAddress);
             }
 
-            return ResponseEntityBuilder.ok("Đăng nhập thành công",  response);
+            return ResponseEntityBuilder.okWithHeader(HttpHeaders.SET_COOKIE,  cookie.toString(),"Đăng nhập thành công",  result.getLoginResponse());
 
         } catch (Exception e) {
             log.error("Login failed for username: {}", request.getUsername(), e);
@@ -94,14 +103,17 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
-            @Valid @RequestBody RefreshTokenRequest request,
+            @CookieValue("refresh_token") String refreshToken,
             HttpServletRequest httpRequest) {
 
         String ipAddress = getClientIpAddress(httpRequest);
         log.info("Token refresh attempt from IP: {}", ipAddress);
 
-        RefreshTokenResponse response = refreshTokenUseCase.execute(request, ipAddress);
-        return ResponseEntityBuilder.ok(response);
+        RefreshResult result = refreshTokenUseCase.execute(refreshToken, ipAddress);
+
+        ResponseCookie cookie = cookieUtils.refreshTokenCookie(
+                result.getRefreshToken());
+        return ResponseEntityBuilder.okWithHeader(HttpHeaders.SET_COOKIE,  cookie.toString(), result.getRefreshTokenResponse());
     }
 
 
