@@ -65,4 +65,25 @@ public class ResponseEntityBuilder {
     public static ResponseEntity<ApiResponse<Void>> ok(String message) {
         return ResponseEntity.ok(ApiResponse.success(message));
     }
+
+    public static <T> ResponseEntity<ApiResponse<T>> okWithHeader(
+            String headerName,
+            String headerValue,
+            T data
+    ) {
+        return ResponseEntity.ok()
+                .header(headerName, headerValue)
+                .body(ApiResponse.success(data));
+    }
+
+    public static <T> ResponseEntity<ApiResponse<T>> okWithHeader(
+            String headerName,
+            String headerValue,
+            String message,
+            T data
+    ) {
+        return ResponseEntity.ok()
+                .header(headerName, headerValue)
+                .body(ApiResponse.success(message, data));
+    }
 }
