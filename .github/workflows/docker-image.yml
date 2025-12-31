@@ -33,8 +33,8 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker tag my-springboot-app:${{ github.sha }} yungvd98/my-springboot-app:latest
-          docker push mydockerhubuser/my-springboot-app:latest
+          docker tag photoshare-app:${{ github.sha }} yungvd98/photoshare-app:latest
+          docker push yungvd98/photoshare-app:latest
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.6
