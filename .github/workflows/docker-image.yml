@@ -16,12 +16,13 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin' 
+          cache: 'maven
 
       - name: Make Maven Wrapper executable
         run: chmod +x ./mvnw
       
       - name: Build JAR
-        run: ./mvnw clean package -DskipTests
+        run: mvn clean package -DskipTests
 
       - name: Build Docker image
         run: docker build -t my-springboot-app:${{ github.sha }} .
