@@ -1,8 +1,11 @@
 package com.dev.photoshare.entity;
 
+import com.dev.photoshare.utils.enums.ActionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class ViolationAction {
 
     @Id
@@ -29,6 +33,7 @@ public class ViolationAction {
     @JoinColumn(name = "report_id", nullable = false)
     private ViolationReport report;
 
+    @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "admin_id", nullable = false)
     private Users admin;
@@ -44,12 +49,4 @@ public class ViolationAction {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public enum ActionType {
-        NO_VIOLATION,     // Report sai
-        WARNING,          // Cảnh cáo user
-        CONTENT_HIDDEN,   // Ẩn ảnh / comment
-        CONTENT_REMOVED,  // Xóa nội dung
-        USER_SUSPENDED,   // Khóa tạm user
-        USER_BANNED       // Ban vĩnh viễn
-    }
 }
