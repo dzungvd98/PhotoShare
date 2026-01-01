@@ -62,7 +62,7 @@ jobs:
             -o ProxyCommand="cloudflared access ssh --hostname %h" \
             -o StrictHostKeyChecking=no \
             dzungvd@ssh.phao.id.vn << 'EOF'
-              cd ~/springboot-app
+              cd ~/photoshare-app
               docker pull yungvd98/photoshare-app:latest
               docker compose up -d
           EOF
