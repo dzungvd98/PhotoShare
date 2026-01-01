@@ -58,10 +58,12 @@ jobs:
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
           ssh \
+            -i ~/.ssh/id_ed25519 \
             -o ProxyCommand="cloudflared access ssh --hostname %h" \
             -o StrictHostKeyChecking=no \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            dzungvd@ssh.phao.id.vn << 'EOF'
               cd ~/springboot-app
               docker pull yungvd98/photoshare-app:latest
               docker compose up -d
           EOF
+
