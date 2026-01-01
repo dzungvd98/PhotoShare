@@ -1,7 +1,9 @@
 package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.ReportViolationRequest;
+import com.dev.photoshare.dto.request.ViolationHandleRequest;
 import com.dev.photoshare.dto.response.ApiResponse;
+import com.dev.photoshare.dto.response.ViolationHandleResponse;
 import com.dev.photoshare.dto.response.ViolationReportResponse;
 import com.dev.photoshare.entity.ViolationReport;
 import com.dev.photoshare.security.CustomUserDetails;
@@ -14,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/report")
@@ -33,6 +32,13 @@ public class ViolationReportController {
         ViolationReportResponse response = violationReportService.sendViolationReport(userId, request);
 
         return ResponseEntityBuilder.created("Gửi báo cáo thành công, nội dung sẽ được quản trị viên xem xét", response);
+    }
+
+    @PostMapping("/{id}/handle")
+    public ResponseEntity<ApiResponse<ViolationHandleResponse>> handleViolation(@PathVariable int id,
+                                                                                @RequestBody @Valid ViolationHandleRequest request) {
+        ViolationHandleResponse response = violationReportService.handleViolationReport(id, request);
+        return ResponseEntityBuilder.ok("Báo cáo đã được xử lý", response);
     }
 
 
