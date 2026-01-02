@@ -2,7 +2,6 @@ package com.dev.photoshare.service.CommentService;
 
 import com.dev.photoshare.dto.request.CommentRequest;
 import com.dev.photoshare.dto.response.CommentResponse;
-import com.dev.photoshare.entity.CommentStats;
 import com.dev.photoshare.entity.Comments;
 import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Users;
@@ -30,11 +29,6 @@ public class CommentService implements ICommentService{
         Comments cmt = new Comments();
         cmt.setContent(comment.getContent());
         cmt.setUser(new Users(userId));
-        cmt.setStatus("ACTIVE");
-
-        CommentStats stats = new CommentStats();
-        stats.setComment(cmt);
-        cmt.setStats(stats);
 
         if(comment.getCommentType().equals(CommentType.PHOTO)) {
             Photos photos = photoRepository.findById(targetId).orElseThrow(
@@ -52,10 +46,6 @@ public class CommentService implements ICommentService{
 
             existing.getReplies().add(cmt);
 
-            if (existing.getStats() != null) {
-                existing.getStats().increaseReplyCount();
-            }
-
             // Lưu comment cha trước để cascade lưu cmt
             commentRepository.save(existing);
         }
@@ -64,7 +54,6 @@ public class CommentService implements ICommentService{
 
         cmt.setContent(comment.getContent());
         cmt.setUser(new Users(userId));
-        cmt.setStatus("ACTIVE");
         commentRepository.save(cmt);
         return CommentResponse.builder()
                 .content(comment.getContent())
@@ -85,12 +74,6 @@ public class CommentService implements ICommentService{
             throw new ValidationException("User not allowed to delete comment!");
         }
 
-        if(existing.getParent() != null) {
-            Comments parent = existing.getParent();
-            if (parent.getStats() != null) {
-                parent.getStats().decreaseReplyCount();
-            }
-        }
         commentRepository.delete(existing);
     }
 }
