@@ -1,37 +1,20 @@
 package com.dev.photoshare.service.AuthService;
 
 
-import com.dev.photoshare.dto.request.LoginRequest;
 import com.dev.photoshare.dto.request.RegisterRequest;
-import com.dev.photoshare.dto.response.AuthResponse;
-import com.dev.photoshare.dto.response.MessageResponse;
 import com.dev.photoshare.dto.response.UserResponse;
 import com.dev.photoshare.entity.*;
 import com.dev.photoshare.exception.*;
 import com.dev.photoshare.repository.RoleRepository;
 import com.dev.photoshare.repository.UserRepository;
-import com.dev.photoshare.security.JwtTokenProvider;
-import com.dev.photoshare.service.JwtBlackListService.JwtBlacklistService;
 import com.dev.photoshare.service.MailService.IMailService;
 import com.dev.photoshare.service.OtpService.IOtpService;
-import com.dev.photoshare.service.RefreshTokenService.IRefreshTokenService;
 import com.dev.photoshare.utils.enums.UserStatus;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-
-import static com.dev.photoshare.utils.enums.TokenType.ACCESS_TOKEN;
 
 @Service
 @RequiredArgsConstructor
@@ -41,9 +24,6 @@ public class AuthService implements IAuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final IRefreshTokenService refreshTokenService;
     private final IMailService  mailService;
     private final IOtpService otpService;
 

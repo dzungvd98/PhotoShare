@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class LikeService implements ILikeService {
     private final LikeRepository likeRepository;
     private final PhotoStatsRepository photoStatsRepository;
-    private final CommentStatsRepository  commentStatsRepository;
 
     @Transactional
     public boolean toggleLike(int userId, long likeableId, LikeableType likeableType) {
@@ -29,8 +28,6 @@ public class LikeService implements ILikeService {
 
         if (likeableType == LikeableType.PHOTO) {
             isLiked = handlePhotoLike(userId, likeableId, existingLike);
-        } else if (likeableType == LikeableType.COMMENT) {
-            isLiked = handleCommentLike(userId, likeableId, existingLike);
         } else {
             throw new IllegalArgumentException("Unsupported LikeableType: " + likeableType);
         }
@@ -54,21 +51,6 @@ public class LikeService implements ILikeService {
         }
     }
 
-    private boolean handleCommentLike(int userId, long commentId, Likes existingLike) {
-        if(!commentStatsRepository.existsByCommentId(commentId)) {
-            throw new EntityNotFoundException("Comment not found with ID: " + commentId);
-        }
-
-        if(existingLike == null) {
-            saveLike(userId, commentId, LikeableType.COMMENT);
-            commentStatsRepository.incrementLikeCount(commentId);
-            return true;
-        } else {
-            likeRepository.delete(existingLike);
-            commentStatsRepository.decrementLikeCount(commentId);
-            return false;
-        }
-    }
 
     private void saveLike(int userId, long likeableId, LikeableType type) {
         Likes like = new Likes();
