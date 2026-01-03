@@ -40,9 +40,10 @@ public class PhotoService implements IPhotoService {
     private final PhotoRepository photoRepository;
     private final UserStatsService userStatsService;
     private final TagRepository tagRepository;
+    private final UserRepository userRepository;
 
     @Transactional
-    public long uploadPhoto(PhotoUploadRequest req, MultipartFile image) throws IOException {
+    public long uploadPhoto(int userId, PhotoUploadRequest req, MultipartFile image) throws IOException {
         if (image == null || image.isEmpty()) return 0;
 
         String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
@@ -52,6 +53,8 @@ public class PhotoService implements IPhotoService {
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
+        Users user = userRepository.getReferenceById(userId);
+
         Photos photo = new Photos();
         photo.setDescription(req.getDescription());
         photo.setUrl("/uploads/" + fileName);
@@ -59,6 +62,7 @@ public class PhotoService implements IPhotoService {
         photo.setStatus(PhotoStatus.PENDING);
         photo.setModerationStatus(ModerationStatus.PENDING);
         photo.setIsArchived(false);
+        photo.setUser(user);
 
         convertAndSavePhotoTag(req.getTags(), photo);
 

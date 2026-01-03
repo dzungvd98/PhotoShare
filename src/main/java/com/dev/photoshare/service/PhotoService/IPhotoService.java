@@ -16,7 +16,7 @@ public interface IPhotoService {
     PageResponse<PhotoFeedView> getListFollowPhotos(int userId, int pageNumber, int pageSize);
     PageResponse<PhotoFeedView> getListNewPhotos(int pageNumber, int pageSize);
     PhotoReviewResponse reviewPhoto(long photoId, int modId, ModerationStatus targetStatus, String reason);
-    long uploadPhoto(PhotoUploadRequest photoUploadRequest,  MultipartFile image) throws IOException;
+    long uploadPhoto(int userId, PhotoUploadRequest photoUploadRequest,  MultipartFile image) throws IOException;
     PhotoResponse updatePhoto(int userId, long photoId, PhotoUpdateRequest request);
     void deletePhoto(long photoId, int userId);
 

@@ -10,26 +10,22 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component("auditorAware")
-public class AuditorAwareImpl implements AuditorAware<Users> {
+public class AuditorAwareImpl implements AuditorAware<Integer> {
 
     @Override
-    public Optional<Users> getCurrentAuditor() {
+    public Optional<Integer> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
             return Optional.empty();
         }
 
         Object principal = authentication.getPrincipal();
 
-        // ✅ Chỉ lấy userId từ CustomUserDetails, KHÔNG query database
         if (principal instanceof CustomUserDetails customUserDetails) {
-            Integer userId = customUserDetails.getId();
-            if (userId != null) {
-                // Tạo Users entity với chỉ ID, Hibernate sẽ tự động reference
-                return Optional.of(new Users(userId));
-            }
+            return Optional.ofNullable(customUserDetails.getId());
         }
 
         return Optional.empty();

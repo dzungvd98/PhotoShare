@@ -1,6 +1,9 @@
 package com.dev.photoshare.security;
 
 import com.dev.photoshare.entity.Users;
+import com.dev.photoshare.exception.AccountDisabledException;
+import com.dev.photoshare.exception.AccountLockedException;
+import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.UserRepository;
 import com.dev.photoshare.utils.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -39,13 +42,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .build();
     }
 
-    public UserDetails loadUserById(int userId) throws UsernameNotFoundException {
+    public UserDetails loadUserById(int userId) throws ResourceNotFoundException {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
-
-        if (!UserStatus.ACTIVE.equals(user.getStatus())) {
-            throw new UsernameNotFoundException("User account is not active");
-        }
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         return CustomUserDetails.builder()
                 .id(user.getId())

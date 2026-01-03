@@ -1,11 +1,14 @@
 package com.dev.photoshare.controller;
 
+import com.dev.photoshare.dto.projection.CommentProjection;
 import com.dev.photoshare.dto.projection.PhotoFeedView;
+import com.dev.photoshare.dto.request.CommentRequest;
 import com.dev.photoshare.dto.request.PhotoReviewRequest;
 import com.dev.photoshare.dto.request.PhotoUpdateRequest;
 import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.security.CustomUserDetails;
+import com.dev.photoshare.service.CommentService.ICommentService;
 import com.dev.photoshare.service.PhotoService.IPhotoService;
 import com.dev.photoshare.utils.ResponseEntityBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +35,7 @@ import java.io.IOException;
 @Tag(name = "Photo Controller")
 public class PhotoController {
     private final IPhotoService photoService;
+    private final ICommentService commentService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> uploadPhoto(
@@ -39,8 +43,9 @@ public class PhotoController {
             @RequestPart(value = "image", required = true) MultipartFile image) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         PhotoUploadRequest request = objectMapper.readValue(photoData, PhotoUploadRequest.class);
+        int userId = getUserIdFromToken();
 
-        long idCreated = photoService.uploadPhoto(request, image);
+        long idCreated = photoService.uploadPhoto(userId, request, image);
         return ResponseEntityBuilder.created("Tạo ảnh thành công", idCreated);
 
     }
@@ -121,9 +126,18 @@ public class PhotoController {
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d ảnh", pageResponse.getTotalElements()), pageResponse);
     }
 
-
-
-
+    @GetMapping("/{photoId}/comments")
+    public ResponseEntity<ApiResponse<PageResponse<CommentProjection>>> getComments(
+            @PathVariable long photoId,
+            @RequestParam(defaultValue = "1")
+            @Min(value = 1, message = "pageNum phải >= 1")
+            int pageNum,
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "pageSize phải >= 1")
+            @Max(value = 100, message = "pageSize tối đa là 100") int pageSize) {
+        PageResponse<CommentProjection> reponse = commentService.getMainComments(photoId, pageNum - 1, pageSize);
+        return ResponseEntityBuilder.ok(String.format("Tìm thấy %d bình luận", reponse.getTotalElements()), reponse);
+    }
 
     private int getUserIdFromToken() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

@@ -4,7 +4,6 @@ import com.dev.photoshare.utils.enums.ActionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -33,7 +32,6 @@ public class ViolationAction {
     @JoinColumn(name = "report_id", nullable = false)
     private ViolationReport report;
 
-    @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "admin_id", nullable = false)
     private Users admin;
