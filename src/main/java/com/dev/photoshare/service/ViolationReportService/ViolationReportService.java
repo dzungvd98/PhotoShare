@@ -8,10 +8,7 @@ import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.entity.ViolationAction;
 import com.dev.photoshare.entity.ViolationReport;
 import com.dev.photoshare.exception.ResourceNotFoundException;
-import com.dev.photoshare.repository.CommentRepository;
-import com.dev.photoshare.repository.PhotoRepository;
-import com.dev.photoshare.repository.ViolationActionRepository;
-import com.dev.photoshare.repository.ViolationReportRepository;
+import com.dev.photoshare.repository.*;
 import com.dev.photoshare.utils.enums.ViolationReportStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class ViolationReportService implements IViolationReportService {
     private final ViolationReportRepository violationReportRepository;
     private final ViolationActionRepository violationActionRepository;
+    private final UserRepository userRepository;
 
     public ViolationReportResponse sendViolationReport(int userReportId, ReportViolationRequest request) {
+        Users user = userRepository.getReferenceById(userReportId);
+
         ViolationReport report = new ViolationReport();
-        report.setReporter(new Users(userReportId));
+        report.setReporter(user);
         report.setTargetType(request.getTargetType());
         report.setReason(request.getViolationReason());
         report.setDescription(request.getDescription());

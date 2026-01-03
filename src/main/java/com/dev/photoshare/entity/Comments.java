@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -34,7 +33,6 @@ public class Comments {
     @JoinColumn(name = "photo_id")
     private Photos photo;
 
-    @CreatedBy
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
@@ -61,4 +59,14 @@ public class Comments {
 
     @LastModifiedBy
     private Integer updatedBy;
+
+    public void decreaseReplyCount() {
+        if (this.replyCount > 0) {
+            this.replyCount--;
+        }
+    }
+
+    public void increaseReplyCount() {
+        this.replyCount++;
+    }
 }
