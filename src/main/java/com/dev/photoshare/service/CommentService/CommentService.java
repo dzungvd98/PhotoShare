@@ -53,6 +53,7 @@ public class CommentService implements ICommentService{
             );
 
             cmt.setParent(existing);
+            cmt.setPhoto(existing.getPhoto());
 
             existing.getReplies().add(cmt);
             existing.increaseReplyCount();
