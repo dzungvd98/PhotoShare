@@ -13,6 +13,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "violation_reports",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"reporter_id", "target_type", "target_id"}
+        ),
         indexes = {
                 @Index(name = "idx_violation_target", columnList = "target_type, target_id"),
                 @Index(name = "idx_violation_status", columnList = "status")
@@ -31,6 +34,10 @@ public class ViolationReport {
     @JoinColumn(name = "reporter_id", nullable = false)
     private Users reporter;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reported_person_id", nullable = false)
+    private Users reportedPerson;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false, length = 20)
     private TargetType targetType;
@@ -40,7 +47,7 @@ public class ViolationReport {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private ViolationReason  reason;
+    private ViolationReason reason;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -56,8 +63,4 @@ public class ViolationReport {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "moderated_id")
-    private Users moderatedBy;
 }

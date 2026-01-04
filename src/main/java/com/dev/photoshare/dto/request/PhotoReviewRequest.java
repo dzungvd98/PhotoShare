@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class PhotoReviewRequest {
     private String reason;
 
-    @NotNull
+    @NotNull(message = "Vui lòng chọn trạng thái phê duyệt")
     private ModerationStatus moderationStatus;
 }

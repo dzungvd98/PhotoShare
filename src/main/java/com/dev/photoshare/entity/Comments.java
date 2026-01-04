@@ -30,7 +30,7 @@ public class Comments {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "photo_id")
+    @JoinColumn(name = "photo_id", nullable = false)
     private Photos photo;
 
     @ManyToOne(fetch = FetchType.LAZY)

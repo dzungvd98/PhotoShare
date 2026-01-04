@@ -112,6 +112,18 @@ public class Users {
         }
     }
 
+    public void lockedUser(int dayNum) {
+        lockedUntil = LocalDateTime.now().plusDays(dayNum);
+    }
+
+    public void unlockedUser() {
+        lockedUntil = null;
+    }
+
+    public void bannedUser() {
+        status = UserStatus.BANNED;
+    }
+
     public boolean isAccountLocked() {
         return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
     }

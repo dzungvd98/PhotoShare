@@ -14,5 +14,6 @@ public class ViolationReportResponse {
     private ViolationReportStatus status;
     private TargetType targetType;
     private Long targetId;
+    private int reportedPersonId;
     private LocalDateTime createdAt;
 }

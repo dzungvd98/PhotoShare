@@ -3,6 +3,7 @@ package com.dev.photoshare.repository;
 import com.dev.photoshare.dto.projection.PhotoFeedView;
 import com.dev.photoshare.dto.response.AwaitingApprovalPhotoResponse;
 import com.dev.photoshare.entity.Photos;
+import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
 import com.dev.photoshare.utils.enums.UserStatus;
@@ -16,11 +17,24 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PhotoRepository extends JpaRepository<Photos,Long> {
     Page<Photos> findAllByUser_IdOrderByUpdatedAtDesc(Integer userId, Pageable pageable);
     boolean existsByIdAndUser_Id(Long id, Integer userId);
+
+    @Query(
+            value = """
+        SELECT u.*
+        FROM photos p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.id = :photoId
+          AND p.is_archived = false
+        """,
+                nativeQuery = true
+        )
+    Optional<Users> findAuthorByPhotoId(@Param("photoId") Long photoId);
 
     @Query("""
         SELECT p FROM Photos p 
@@ -188,6 +202,14 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
             nativeQuery = true
     )
     Page<PhotoFeedView> findLatestPhotos(Pageable pageable);
+
+    @Modifying
+    @Query("""
+         UPDATE Photos p
+            SET p.isArchived = true
+            WHERE p.id = :photoId
+    """)
+    public void softDeletePhotoById(@Param("photoId") long photoId);
 
 
 

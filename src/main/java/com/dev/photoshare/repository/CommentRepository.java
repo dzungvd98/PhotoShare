@@ -3,6 +3,7 @@ package com.dev.photoshare.repository;
 import com.dev.photoshare.dto.projection.CommentProjection;
 import com.dev.photoshare.dto.response.CommentResponse;
 import com.dev.photoshare.entity.Comments;
+import com.dev.photoshare.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,17 @@ import java.util.Optional;
 @Repository
 public interface CommentRepository extends JpaRepository<Comments,Long> {
     Optional<Comments> findById(long id);
+    @Query(
+            value = """
+        SELECT u.*
+        FROM comments c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.id = :commentId
+          AND c.deleted = false
+        """,
+            nativeQuery = true
+    )
+    Optional<Users> findAuthorByCommentId(@Param("commentId") Long commentId);
 
     @Query("""
     SELECT

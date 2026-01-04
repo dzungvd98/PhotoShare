@@ -76,7 +76,7 @@ public class PhotoController {
                                                            @RequestBody @Valid PhotoReviewRequest request) {
 
         int modId = getUserIdFromToken();
-        return ResponseEntityBuilder.ok("Phê duyệt ảnh thành công",photoService.reviewPhoto(photoId, modId, request.getModerationStatus(), request.getReason()));
+        return ResponseEntityBuilder.ok("Phê duyệt ảnh thành công", photoService.reviewPhoto(photoId, modId, request.getModerationStatus(), request.getReason()));
     }
 
     @GetMapping("/pending-approval")

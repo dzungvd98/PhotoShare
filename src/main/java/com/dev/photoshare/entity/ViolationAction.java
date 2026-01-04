@@ -4,6 +4,7 @@ import com.dev.photoshare.utils.enums.ActionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
         name = "violation_actions",
         indexes = {
                 @Index(name = "idx_action_report", columnList = "report_id"),
-                @Index(name = "idx_action_admin", columnList = "admin_id"),
+                @Index(name = "idx_action_mod", columnList = "mod_id"),
                 @Index(name = "idx_action_type", columnList = "action_type")
         }
 )
@@ -32,9 +33,8 @@ public class ViolationAction {
     @JoinColumn(name = "report_id", nullable = false)
     private ViolationReport report;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "admin_id", nullable = false)
-    private Users admin;
+    @CreatedBy
+    private int modId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action_type", nullable = false, length = 30)
@@ -46,5 +46,4 @@ public class ViolationAction {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
 }
