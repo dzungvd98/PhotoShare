@@ -5,6 +5,7 @@ import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.dto.utils.LoginResult;
 import com.dev.photoshare.dto.utils.RefreshResult;
 import com.dev.photoshare.security.CustomUserDetails;
+import com.dev.photoshare.security.DeviceInfoExtractor;
 import com.dev.photoshare.security.refresh.CookieUtils;
 import com.dev.photoshare.service.AuditLogService.AuditLogService;
 import com.dev.photoshare.service.AuthService.IAuthService;
@@ -67,6 +68,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest) {
+
+        request.setDeviceInfo(
+                DeviceInfoExtractor.extract(httpRequest)
+        );
 
         String ipAddress = getClientIpAddress(httpRequest);
         log.info("Login attempt for username: {} from IP: {}", request.getUsername(), ipAddress);

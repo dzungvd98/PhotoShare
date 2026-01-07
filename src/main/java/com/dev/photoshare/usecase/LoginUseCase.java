@@ -166,8 +166,7 @@ public class LoginUseCase {
 
 
         throw new InvalidCredentialsException(
-                "Invalid username or password",
-                attemptsRemaining
+                "Tên đăng nhập hoặc mật khẩu không đúng"
         );
     }
 
