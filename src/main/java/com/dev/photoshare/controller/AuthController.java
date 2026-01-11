@@ -74,11 +74,11 @@ public class AuthController {
         );
 
         String ipAddress = getClientIpAddress(httpRequest);
-        log.info("Login attempt for username: {} from IP: {}", request.getUsername(), ipAddress);
+        log.info("Login attempt for username: {} from IP: {}", request.getEmail(), ipAddress);
 
         try {
             // Check rate limit
-            rateLimiterService.checkRateLimit(request.getUsername(), ipAddress);
+            rateLimiterService.checkRateLimit(request.getEmail(), ipAddress);
 
             // Execute login
             LoginResult result = loginUseCase.execute(request, ipAddress);
@@ -88,13 +88,13 @@ public class AuthController {
 
             // Reset rate limit on successful login
             if (!result.getLoginResponse().isRequiresMfa()) {
-                rateLimiterService.resetRateLimit(request.getUsername(), ipAddress);
+                rateLimiterService.resetRateLimit(request.getEmail(), ipAddress);
             }
 
             return ResponseEntityBuilder.okWithHeader(HttpHeaders.SET_COOKIE,  cookie.toString(),"Đăng nhập thành công",  result.getLoginResponse());
 
         } catch (Exception e) {
-            log.error("Login failed for username: {}", request.getUsername(), e);
+            log.error("Login failed for email: {}", request.getEmail(), e);
             throw e;
         }
     }

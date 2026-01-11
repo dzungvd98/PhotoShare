@@ -57,7 +57,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
                     p.description AS description,
                     p.url AS photoUrl,
                     u.id AS creatorId,
-                    COALESCE(pf.display_name, u.username) AS creatorName,
+                    pf.display_name AS creatorName,
                     pf.avatar_url AS ownerAvatar,
                     s.like_count AS likeCount,
                     s.comment_count AS commentCount,
@@ -114,7 +114,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
                     p.url AS photoUrl,
         
                     u.id AS creatorId,
-                    COALESCE(pf.display_name, u.username) AS creatorName,
+                    pf.display_name AS creatorName,
                     pf.avatar_url AS ownerAvatar,
         
                     s.like_count AS likeCount,
@@ -173,7 +173,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
                     p.url AS photoUrl,
         
                     u.id AS creatorId,
-                    COALESCE(pf.display_name, u.username) AS creatorName,
+                    pf.display_name AS creatorName,
                     pf.avatar_url AS ownerAvatar,
         
                     s.like_count AS likeCount,

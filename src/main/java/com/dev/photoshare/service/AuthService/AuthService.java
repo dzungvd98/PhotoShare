@@ -29,11 +29,11 @@ public class AuthService implements IAuthService {
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
-        log.info("Attempting to register user: {}", request.getUsername());
+        log.info("Attempting to register email: {}", request.getEmail());
 
         // Validate username
-        if (Boolean.TRUE.equals(userRepository.existsByUsername(request.getUsername()))) {
-            throw new DuplicateResourceException("User", "username", request.getUsername());
+        if (Boolean.TRUE.equals(userRepository.existsByEmail(request.getEmail()))) {
+            throw new DuplicateResourceException("User", "email", request.getEmail());
         }
 
         // Validate email
@@ -51,10 +51,10 @@ public class AuthService implements IAuthService {
                     return roleRepository.save(newRole);
                 });
         Profiles profile = new Profiles();
+        profile.setDisplayName(request.getUsername());
         UserStats userStats = new UserStats();
 
         Users user = Users.builder()
-                .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .authProvider("local")
@@ -69,7 +69,7 @@ public class AuthService implements IAuthService {
         userStats.setUser(user);
 
         Users savedUser = userRepository.save(user);
-        log.info("User registered successfully: {}", savedUser.getUsername());
+        log.info("User registered successfully: {}", savedUser.getEmail());
 
 
         mailService.sendSimpleEmail(user.getEmail(), "Verify Account", "Your verify code is: " + otpService.createOtp(user.getEmail()));
@@ -77,7 +77,8 @@ public class AuthService implements IAuthService {
 
         return UserResponse.builder()
                 .email(savedUser.getEmail())
-                .username(request.getUsername())
+                .roleName(savedUser.getRole().getRoleName().toUpperCase())
+                .status(UserStatus.PENDING_VERIFICATION.toString())
                 .build();
     }
 

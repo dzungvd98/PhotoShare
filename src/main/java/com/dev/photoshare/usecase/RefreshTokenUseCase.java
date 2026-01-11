@@ -101,7 +101,7 @@ public class RefreshTokenUseCase {
                 )
         );
 
-        log.info("Tokens refreshed for user: {}, session: {}", user.getUsername(), session.getId());
+        log.info("Tokens refreshed for user: {}, session: {}", user.getEmail(), session.getId());
 
         RefreshTokenResponse response =  RefreshTokenResponse.builder()
                 .accessToken(newAccessToken)

@@ -20,8 +20,8 @@ public class FollowController {
     private final IFollowService iFollowService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<FollowResponse>> toggleFollow(@RequestParam String targetUsername) {
-        FollowResponse followResponse = iFollowService.toggleFollow(targetUsername);
+    public ResponseEntity<ApiResponse<FollowResponse>> toggleFollow(@RequestParam int userId) {
+        FollowResponse followResponse = iFollowService.toggleFollow(userId);
         return ResponseEntityBuilder.ok(followResponse);
     }
 }

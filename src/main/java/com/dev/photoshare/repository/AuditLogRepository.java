@@ -12,10 +12,7 @@ import java.util.List;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-    List<AuditLog> findByUserId(Long userId);
-
-    @Query("SELECT a FROM AuditLog a WHERE a.username = :username AND a.createdAt > :since ORDER BY a.createdAt DESC")
-    List<AuditLog> findRecentByUsername(@Param("username") String username, @Param("since") LocalDateTime since);
+    List<AuditLog> findByUserId(int userId);
 
     @Query("SELECT a FROM AuditLog a WHERE a.ipAddress = :ip AND a.createdAt > :since ORDER BY a.createdAt DESC")
     List<AuditLog> findRecentByIp(@Param("ip") String ip, @Param("since") LocalDateTime since);

@@ -34,7 +34,7 @@ public class AuditLogService implements IAuditLogService{
 
             AuditLog auditLog = AuditLog.builder()
                     .user(user)
-                    .username(user.getUsername())
+                    .email(user.getEmail())
                     .eventType("LOGIN_SUCCESS")
                     .status("SUCCESS")
                     .ipAddress(ipAddress)
@@ -45,7 +45,7 @@ public class AuditLogService implements IAuditLogService{
                     .build();
 
             auditLogRepository.save(auditLog);
-            log.info("Logged successful login for user: {}", user.getUsername());
+            log.info("Logged successful login for email: {}", user.getEmail());
         } catch (Exception e) {
             log.error("Failed to log successful login", e);
         }
@@ -53,7 +53,7 @@ public class AuditLogService implements IAuditLogService{
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void logFailedAttempt(String username, Integer userId, String ipAddress,
+    public void logFailedAttempt(String email, Integer userId, String ipAddress,
                                  String reason, LoginRequest.DeviceInfo deviceInfo) {
         try {
             Map<String, Object> details = new HashMap<>();
@@ -64,7 +64,7 @@ public class AuditLogService implements IAuditLogService{
 
             AuditLog auditLog = AuditLog.builder()
                     .user(new Users(userId))
-                    .username(username)
+                    .email(email)
                     .eventType("LOGIN_FAILED")
                     .status("FAILED")
                     .ipAddress(ipAddress)
@@ -74,7 +74,7 @@ public class AuditLogService implements IAuditLogService{
                     .build();
 
             auditLogRepository.save(auditLog);
-            log.warn("Logged failed login attempt for username: {}, reason: {}", username, reason);
+            log.warn("Logged failed login attempt for email: {}, reason: {}", email, reason);
         } catch (Exception e) {
             log.error("Failed to log failed attempt", e);
         }
@@ -89,7 +89,7 @@ public class AuditLogService implements IAuditLogService{
 
             AuditLog auditLog = AuditLog.builder()
                     .user(user)
-                    .username(user.getUsername())
+                    .email(user.getEmail())
                     .eventType("LOGIN_MFA_REQUIRED")
                     .status("PENDING")
                     .ipAddress(ipAddress)
@@ -99,7 +99,7 @@ public class AuditLogService implements IAuditLogService{
                     .build();
 
             auditLogRepository.save(auditLog);
-            log.info("Logged MFA requirement for user: {}", user.getUsername());
+            log.info("Logged MFA requirement for email: {}", user.getEmail());
         } catch (Exception e) {
             log.error("Failed to log MFA requirement", e);
         }
@@ -111,14 +111,14 @@ public class AuditLogService implements IAuditLogService{
         try {
             AuditLog auditLog = AuditLog.builder()
                     .user(user)
-                    .username(user.getUsername())
+                    .email(user.getEmail())
                     .eventType(eventType)
                     .status(status)
                     .details(objectMapper.writeValueAsString(details))
                     .build();
 
             auditLogRepository.save(auditLog);
-            log.info("Logged event: {} for user: {}", eventType, user.getUsername());
+            log.info("Logged event: {} for email: {}", eventType, user.getEmail());
         } catch (Exception e) {
             log.error("Failed to log event", e);
         }
