@@ -24,17 +24,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         if (!UserStatus.ACTIVE.equals(user.getStatus())) {
-            throw new UsernameNotFoundException("User account is not active");
+            throw new AccountDisabledException("User account is not active");
         }
 
         return CustomUserDetails.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .username(user.getEmail())
                 .password(user.getPassword())
                 .authorities(Collections.singletonList(
                         new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName().toUpperCase())
@@ -48,7 +48,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return CustomUserDetails.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .username(user.getEmail())
                 .password(user.getPassword())
                 .authorities(Collections.singletonList(
                         new SimpleGrantedAuthority("ROLE_" + user.getRole().getRoleName().toUpperCase())

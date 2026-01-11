@@ -45,7 +45,7 @@ public class LogoutUseCase {
                         )
                 );
 
-                log.info("User {} logged out, session {} revoked", user.getUsername(), session.getId());
+                log.info("User {} logged out, session {} revoked", user.getEmail(), session.getId());
             }
         } else {
             // If no refresh token provided, revoke all sessions (optional behavior)
@@ -58,7 +58,7 @@ public class LogoutUseCase {
                     Map.of("ip_address", ipAddress)
             );
 
-            log.info("User {} logged out from all sessions", user.getUsername());
+            log.info("User {} logged out from all sessions", user.getEmail());
         }
     }
 }

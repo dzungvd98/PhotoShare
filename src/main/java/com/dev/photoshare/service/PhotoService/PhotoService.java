@@ -122,9 +122,11 @@ public class PhotoService implements IPhotoService {
 
         Users creator = photo.getUser();
 
-        String creatorName = StringUtils.hasText(creator.getProfile().getDisplayName())
-                ? creator.getProfile().getDisplayName()
-                : creator.getUsername();
+        String creatorName = Optional.ofNullable(creator.getProfile())
+                .map(Profiles::getDisplayName)
+                .filter(StringUtils::hasText)
+                .orElse(null);
+
 
         PhotoStats stats = photo.getStats();
 
@@ -232,10 +234,11 @@ public class PhotoService implements IPhotoService {
                 .photoId(photo.getId())
                 .ownerId(photo.getUser().getId())
                 .creatorAvatar(photo.getUser().getProfile().getAvatarUrl())
-                .creatorName(
-                        photo.getUser().getProfile().getDisplayName() != null
-                                ? photo.getUser().getProfile().getDisplayName()
-                                : photo.getUser().getUsername()
+                .creatorName(Optional.ofNullable(photo.getUser().getProfile())
+                                .map(Profiles::getDisplayName)
+                                .filter(StringUtils::hasText)
+                                .orElse(null)
+
 
                 ).build();
     }

@@ -54,18 +54,16 @@ public class LoginUseCase {
 
     @Transactional
     public LoginResult execute(LoginRequest request, String ipAddress) {
-        // 1. Validate Input
-        validateInput(request);
 
         // 2. Find User
-        Users user = userRepository.findByUsername(request.getUsername())
+        Users user = userRepository.findByEmail(request.getEmail())
                 .orElse(null);
 
         if (user == null) {
             // Prevent timing attacks
             passwordService.hashDummy();
             auditLogService.logFailedAttempt(
-                    request.getUsername(), null, ipAddress,
+                    request.getEmail(), null, ipAddress,
                     "USER_NOT_FOUND", request.getDeviceInfo()
             );
             throw new InvalidCredentialsException("Invalid username or password");
@@ -94,21 +92,13 @@ public class LoginUseCase {
         return handleSuccessfulLogin(user, ipAddress, request.getDeviceInfo());
     }
 
-    private void validateInput(LoginRequest request) {
-        if (request.getUsername() == null || request.getUsername().isBlank()) {
-            throw new ValidationException("username", "Username is required");
-        }
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new ValidationException("password", "Password is required");
-        }
-    }
 
     private void checkAccountStatus(Users user, String ipAddress,
                                     LoginRequest.DeviceInfo deviceInfo) {
         // Check if account is locked
         if (user.isAccountLocked()) {
             auditLogService.logFailedAttempt(
-                    user.getUsername(), user.getId(), ipAddress,
+                    user.getEmail(), user.getId(), ipAddress,
                     "ACCOUNT_LOCKED", deviceInfo
             );
             throw new AccountLockedException(
@@ -120,7 +110,7 @@ public class LoginUseCase {
         // Check if account is disabled
         if (user.getStatus() == UserStatus.DISABLED) {
             auditLogService.logFailedAttempt(
-                    user.getUsername(), user.getId(), ipAddress,
+                    user.getEmail(), user.getId(), ipAddress,
                     "ACCOUNT_DISABLED", deviceInfo
             );
             throw new AccountDisabledException("Your account has been disabled");
@@ -129,7 +119,7 @@ public class LoginUseCase {
         // Check is account verify
         if (user.getStatus() == UserStatus.PENDING_VERIFICATION) {
             auditLogService.logFailedAttempt(
-                    user.getUsername(), user.getId(), ipAddress,
+                    user.getEmail(), user.getId(), ipAddress,
                     "ACCOUNT_NOT_VERIFIED", deviceInfo
             );
             throw new AccountNotVerifiedException(
@@ -151,7 +141,7 @@ public class LoginUseCase {
             userRepository.lockAccount(user.getId(), lockUntil, LocalDateTime.now());
 
             auditLogService.logFailedAttempt(
-                    user.getUsername(), user.getId(), ipAddress,
+                    user.getEmail(), user.getId(), ipAddress,
                     "INVALID_PASSWORD_LOCKED", deviceInfo
             );
 
@@ -160,7 +150,7 @@ public class LoginUseCase {
 
         int attemptsRemaining = maxFailedAttempts - user.getFailedLoginAttempts();
         auditLogService.logFailedAttempt(
-                user.getUsername(), user.getId(), ipAddress,
+                user.getEmail(), user.getId(), ipAddress,
                 "INVALID_PASSWORD", deviceInfo
         );
 
@@ -265,9 +255,8 @@ public class LoginUseCase {
                 .expiresIn(tokenService.getAccessTokenExpiration())
                 .user(LoginResponse.UserInfo.builder()
                         .id(user.getId())
-                        .username(user.getUsername())
                         .email(user.getEmail())
-                        .fullName(user.getUsername())
+                        .fullName(user.getProfile().getDisplayName())
                         .role(role)
                         .lastLoginAt(user.getLastLogin())
                         .build())
@@ -286,7 +275,7 @@ public class LoginUseCase {
                 !user.getLastLoginIp().equals(ipAddress);
 
         if (isNewDevice) {
-            log.info("New device/location detected for user: {}", user.getUsername());
+            log.info("New device/location detected for email: {}", user.getEmail());
             // Here you would send a security notification email/push
             // emailService.sendSecurityAlert(user, ipAddress, deviceInfo);
             mailService.sendSimpleEmail(user.getEmail(), "Phát hiện đăng nhập bất thường", "Phát hiện lượt đăng nhập bất thường trên thiết bị " + deviceInfo.getDeviceName() +  ". Nếu không phải bạn vui lòng đổi mật khẩu để đảm bảo an toàn!");

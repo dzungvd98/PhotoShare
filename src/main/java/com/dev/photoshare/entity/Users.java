@@ -19,7 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 @Table(
         indexes = {
-                @Index(name = "idx_username", columnList = "username", unique = true),
                 @Index(name = "idx_email", columnList = "email", unique = true),
                 @Index(name = "idx_user_status_role", columnList = "status, role_id")
         }
@@ -29,9 +28,6 @@ public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(nullable = false, length = 50, unique = true)
-    private String username;
 
     @Column(length = 255)
     private String password;
@@ -48,10 +44,10 @@ public class Users {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Profiles profile;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserStats userStats;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

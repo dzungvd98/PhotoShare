@@ -35,7 +35,7 @@ public interface CommentRepository extends JpaRepository<Comments,Long> {
         c.content AS commentContent,
         c.createdAt AS createdDate,
         u.id AS userId,
-        COALESCE(p.displayName, u.username) AS userDisplayName,
+        p.displayName AS userDisplayName,
         p.avatarUrl AS userAvatar,
         c.replyCount AS replyCount
     FROM Comments c
@@ -58,7 +58,7 @@ public interface CommentRepository extends JpaRepository<Comments,Long> {
             c.content AS commentContent,
             c.createdAt AS createdDate,
             u.id AS userId,
-            COALESCE(p.displayName, u.username) AS userDisplayName,
+            p.displayName AS userDisplayName,
             p.avatarUrl AS userAvatar
         FROM Comments c
         JOIN c.user u

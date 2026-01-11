@@ -79,7 +79,6 @@ public class UserService implements IUserService{
         Users savedUser = userRepository.save(user);
 
         return UserResponse.builder()
-                .username(savedUser.getUsername())
                 .email(savedUser.getEmail())
                 .phone(savedUser.getPhone())
                 .lastLogin(savedUser.getLastLogin())
@@ -94,7 +93,6 @@ public class UserService implements IUserService{
         Profiles profile = user.getProfile();
         return LstProfileResponse.builder()
                 .id(user.getId())
-                .username(user.getUsername())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .birthDate(user.getBirthDate())

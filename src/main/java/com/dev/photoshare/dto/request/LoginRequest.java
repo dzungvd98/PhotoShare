@@ -1,5 +1,6 @@
 package com.dev.photoshare.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -12,7 +13,8 @@ import lombok.*;
 public class LoginRequest {
 
     @NotBlank(message = "Username is required")
-    private String username;
+    @Email(message = "Email is not valid")
+    private String email;
 
     @NotBlank(message = "Password is required")
     private String password;

@@ -37,9 +37,7 @@ public class ProfileService implements IProfileService{
         Profiles profile = user.getProfile();
         UserStats userStats = user.getUserStats();
 
-        String displayName = StringUtils.hasText(profile.getDisplayName())
-                ? profile.getDisplayName().trim()
-                : user.getUsername();
+        String displayName = profile.getDisplayName().trim();
 
         return ProfileResponse.builder()
                 .bio(profile.getBio())

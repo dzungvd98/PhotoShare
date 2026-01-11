@@ -25,7 +25,8 @@ public class AuditLog {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    private String username;
+    @Column(nullable = false)
+    private String email;
 
     @Column(nullable = false)
     private String eventType;

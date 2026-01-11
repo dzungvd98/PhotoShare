@@ -15,15 +15,10 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<Users,Integer> {
-    Optional<Users> findByUsername(String username);
 
     Optional<Users> findByEmail(String email);
 
-    Boolean existsByUsername(String username);
-
     Boolean existsByEmail(String email);
-
-    Optional<Users> findByUsernameAndStatus(String username, UserStatus status);
 
     @Query("SELECT u FROM Users u LEFT JOIN FETCH u.userStats")
     Page<Users> findAllWithStats(Pageable pageable);

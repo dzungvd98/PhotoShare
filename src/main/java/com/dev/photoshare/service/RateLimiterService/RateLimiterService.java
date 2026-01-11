@@ -19,16 +19,16 @@ public class RateLimiterService {
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
 
-    // 5 attempts per 15 minutes per IP
+    // 5 attempts per 1 minutes per IP
     private static final int IP_CAPACITY = 5;
-    private static final int IP_REFILL_MINUTES = 15;
+    private static final int IP_REFILL_MINUTES = 1;
 
-    // 3 attempts per 15 minutes per username
-    private static final int USERNAME_CAPACITY = 3;
-    private static final int USERNAME_REFILL_MINUTES = 15;
+    // 3 attempts per 1 minutes per email
+    private static final int IDENTITY_CAPACITY = 3;
+    private static final int IDENTITY_REFILL_MINUTES = 1;
 
-    public void checkRateLimit(String username, String ipAddress) {
-        // Check IP-based rate limit
+    public void checkRateLimit(String email, String ipAddress) {
+        // 1. Rate limit theo IP
         String ipKey = "ip:" + ipAddress;
         Bucket ipBucket = resolveBucket(ipKey, IP_CAPACITY, IP_REFILL_MINUTES);
 
@@ -40,16 +40,20 @@ public class RateLimiterService {
             );
         }
 
-        // Check username-based rate limit
-        if (username != null && !username.isBlank()) {
-            String userKey = "user:" + username.toLowerCase();
-            Bucket userBucket = resolveBucket(userKey, USERNAME_CAPACITY, USERNAME_REFILL_MINUTES);
+        // 2. Rate limit theo account (email)
+        if (email != null && !email.isBlank()) {
+            String identityKey = "identity:" + email.toLowerCase();
+            Bucket identityBucket = resolveBucket(
+                    identityKey,
+                    IDENTITY_CAPACITY,
+                    IDENTITY_REFILL_MINUTES
+            );
 
-            if (!userBucket.tryConsume(1)) {
-                log.warn("Rate limit exceeded for username: {}", username);
+            if (!identityBucket.tryConsume(1)) {
+                log.warn("Rate limit exceeded for email: {}", email);
                 throw new RateLimitExceededException(
                         "Too many login attempts for this account. Please try again later.",
-                        USERNAME_REFILL_MINUTES * 60
+                        IDENTITY_REFILL_MINUTES * 60
                 );
             }
         }
@@ -78,12 +82,12 @@ public class RateLimiterService {
     /**
      * Resets rate limit for a specific key (e.g., after successful login)
      */
-    public void resetRateLimit(String username, String ipAddress) {
+    public void resetRateLimit(String email, String ipAddress) {
         if (ipAddress != null) {
             buckets.remove("ip:" + ipAddress);
         }
-        if (username != null) {
-            buckets.remove("user:" + username.toLowerCase());
+        if (email != null && !email.isBlank()) {
+            buckets.remove("identity:" + email.toLowerCase());
         }
     }
 
