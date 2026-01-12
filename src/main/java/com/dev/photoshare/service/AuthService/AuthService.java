@@ -67,6 +67,8 @@ public class AuthService implements IAuthService {
 
         profile.setUser(user);
         userStats.setUser(user);
+        String mfaChallengeId = java.util.UUID.randomUUID().toString();
+        user.setMfaSecret(mfaChallengeId);
 
         Users savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getEmail());
@@ -79,32 +81,34 @@ public class AuthService implements IAuthService {
                 .email(savedUser.getEmail())
                 .roleName(savedUser.getRole().getRoleName().toUpperCase())
                 .status(UserStatus.PENDING_VERIFICATION.toString())
+                .path("/auth/verify?mid=" + mfaChallengeId)
                 .build();
     }
 
 
     @Transactional
-    public boolean verifyAccount(String email, String otp) {
-        Users user = userRepository.findByEmail(email)
+    public boolean verifyAccount(String mid, String otp) {
+        Users user = userRepository.findByMfaSecret(mid)
                 .orElseThrow(() ->  new ResourceNotFoundException(
                         "User",
-                        "email",
-                        email
+                        "mfaSecret",
+                        mid
                 ));
 
         if (user.getStatus() != UserStatus.PENDING_VERIFICATION) {
             throw new BusinessException("Account already verified");
         }
 
-        boolean verified = otpService.verifyOtp(email, otp);
+        boolean verified = otpService.verifyOtp(user.getEmail(), otp);
 
         if (!verified) {
-            log.warn("OTP verification failed for email={}", email);
+            log.warn("OTP verification failed for email={}", user.getEmail());
             throw new InvalidOtpException("Invalid or expired OTP");
         }
+        user.setMfaSecret(null);
 
-        userRepository.changeUserStatus(email, UserStatus.ACTIVE);
-        log.info("Account verified successfully for email={}", email);
+        userRepository.changeUserStatus(user.getEmail(), UserStatus.ACTIVE);
+        log.info("Account verified successfully for email={}", user.getEmail());
 
         return true;
     }

@@ -6,10 +6,9 @@ import lombok.Getter;
 
 @Getter
 public class VerifyAccountRequest {
-    @Email(message = "invalid email!")
-    @NotBlank(message = "email is required!")
-    private String email;
+    @NotBlank(message = "Mã định danh tài khoản là bắt buộc")
+    private String mid;
 
-    @NotBlank(message = "otp is required!")
+    @NotBlank(message = "Otp là bắt buộc!")
     private String otp;
 }
