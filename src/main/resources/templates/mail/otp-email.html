@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <title>OTP Verification</title>
 </head>
+
 <body style="
   margin:0;
   padding:0;
@@ -15,41 +16,32 @@
     <tr>
         <td align="center" style="padding:24px;">
 
-            <!-- Container -->
             <table width="600" cellpadding="0" cellspacing="0" style="
-        background-color:#ffffff;
-        border-radius:12px;
-        overflow:hidden;
-        border:1px solid #e5e7eb;
-      ">
+                background-color:#ffffff;
+                border-radius:12px;
+                border:1px solid #e5e7eb;
+            ">
 
                 <!-- Header -->
                 <tr>
-                    <td style="
-            padding:20px 24px;
-            border-bottom:1px solid #e5e7eb;
-          ">
+                    <td style="padding:20px 24px; border-bottom:1px solid #e5e7eb;">
                         <table width="100%">
                             <tr>
-                                <td style="
-                  font-size:18px;
-                  font-weight:bold;
-                  color:#111827;
-                ">
+                                <td style="font-size:18px;font-weight:bold;color:#111827;">
                                     📸 PhotoShare Community
                                 </td>
                                 <td align="right">
-                  <span style="
-                    display:inline-block;
-                    padding:6px 12px;
-                    background-color:#e0edff;
-                    color:#3c83f6;
-                    border-radius:999px;
-                    font-size:12px;
-                    font-weight:bold;
-                  ">
-                    VERIFIED
-                  </span>
+                                    <span style="
+                                        display:inline-block;
+                                        padding:6px 12px;
+                                        background-color:#e0edff;
+                                        color:#3c83f6;
+                                        border-radius:999px;
+                                        font-size:12px;
+                                        font-weight:bold;
+                                    ">
+                                        VERIFIED
+                                    </span>
                                 </td>
                             </tr>
                         </table>
@@ -60,70 +52,55 @@
                 <tr>
                     <td style="padding:32px 24px; text-align:center;">
 
-                        <h1 style="
-              margin:0 0 12px 0;
-              font-size:26px;
-              color:#111827;
-            ">
+                        <h1 style="margin:0 0 12px;font-size:26px;color:#111827;">
                             Welcome to PhotoShare Community!
                         </h1>
 
-                        <p style="
-              margin:0 0 24px 0;
-              font-size:15px;
-              color:#4b5563;
-              line-height:1.6;
-            ">
+                        <p style="margin:0 0 24px;font-size:15px;color:#4b5563;line-height:1.6;">
                             You're just one step away from joining our community of creators.
                             Use the verification code below to activate your account.
                         </p>
 
                         <!-- OTP BOX -->
-                        <table cellpadding="0" cellspacing="0" align="center" style="
-              background-color:#f9fafb;
-              border:1px solid #e5e7eb;
-              border-radius:12px;
-              padding:20px;
-              margin-bottom:24px;
-            ">
+                        <table align="center" cellpadding="0" cellspacing="0" style="
+                            background-color:#f9fafb;
+                            border:1px solid #e5e7eb;
+                            border-radius:12px;
+                            padding:20px;
+                            margin-bottom:24px;
+                        ">
                             <tr>
                                 <td style="
-                  font-size:11px;
-                  color:#6b7280;
-                  letter-spacing:2px;
-                  font-weight:bold;
-                  padding-bottom:12px;
-                  text-align:center;
-                ">
+                                    font-size:11px;
+                                    color:#6b7280;
+                                    letter-spacing:2px;
+                                    font-weight:bold;
+                                    padding-bottom:12px;
+                                ">
                                     YOUR VERIFICATION CODE
                                 </td>
                             </tr>
                             <tr>
                                 <td align="center">
-                                    <!-- OTP DIGITS -->
-                                    <span style="
-                    display:inline-block;
-                    padding:12px 18px;
-                    margin:4px;
-                    border:2px solid #3c83f6;
-                    border-radius:8px;
-                    font-size:28px;
-                    font-weight:bold;
-                    color:#3c83f6;
-                  ">
-                    {{otp}}
-                  </span>
+                                    <span
+                                            style="
+                                        display:inline-block;
+                                        padding:12px 18px;
+                                        border:2px solid #3c83f6;
+                                        border-radius:8px;
+                                        font-size:28px;
+                                        font-weight:bold;
+                                        color:#3c83f6;
+                                        letter-spacing:6px;
+                                      "
+                                            th:text="${otp}">
+                                    </span>
                                 </td>
                             </tr>
                         </table>
 
-                        <p style="
-              margin:0;
-              font-size:13px;
-              color:#6b7280;
-            ">
-                            This code will expire in
-                            <span style="color:#dc2626; font-weight:bold;">10 minutes</span>.
+                        <p style="font-size:13px;color:#6b7280;">
+                            This code will expire in 5 minutes.
                         </p>
 
                     </td>
@@ -131,35 +108,13 @@
 
                 <!-- Footer -->
                 <tr>
-                    <td style="
-            padding:20px 24px;
-            border-top:1px solid #e5e7eb;
-            font-size:13px;
-            color:#6b7280;
-          ">
-                        <p style="margin:0; font-weight:bold; color:#111827;">
-                            Happy sharing,
-                        </p>
-                        <p style="margin:4px 0 0 0;">
-                            The PhotoShare Team
-                        </p>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="
-            background-color:#f9fafb;
-            text-align:center;
-            padding:16px;
-            font-size:11px;
-            color:#9ca3af;
-          ">
-                        © 2023 PhotoShare Community. All rights reserved.
+                    <td style="padding:20px 24px;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
+                        <p style="margin:0;font-weight:bold;color:#111827;">Happy sharing,</p>
+                        <p style="margin:4px 0 0;">The PhotoShare Team</p>
                     </td>
                 </tr>
 
             </table>
-            <!-- End Container -->
 
         </td>
     </tr>
