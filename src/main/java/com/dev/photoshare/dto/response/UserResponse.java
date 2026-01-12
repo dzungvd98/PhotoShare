@@ -17,4 +17,5 @@ public class UserResponse {
     private String status;
     private String roleName;
     private LocalDateTime lastLogin;
+    private String path;
 }

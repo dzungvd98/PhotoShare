@@ -101,7 +101,7 @@ public class AuthController {
 
     @PostMapping("/verify-account")
     public ResponseEntity<ApiResponse<Void>> verifyAccount(@Valid @RequestBody VerifyAccountRequest request) {
-        authService.verifyAccount(request.getEmail(), request.getOtp());
+        authService.verifyAccount(request.getMid(), request.getOtp());
         return ResponseEntityBuilder.ok("Tài khoản đã được xác minh");
     }
 
