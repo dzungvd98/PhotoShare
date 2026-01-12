@@ -9,6 +9,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +18,8 @@ import org.springframework.stereotype.Service;
 public class MailService implements IMailService {
 
     private final JavaMailSender mailSender;
-    
+    private final SpringTemplateEngine templateEngine;
+
     @Value("${spring.mail.from:noreply@photoshare.com}")
     private String fromEmail;
 
@@ -55,5 +58,32 @@ public class MailService implements IMailService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
+
+    public void sendOtpEmail(String to, String otp) {
+        try {
+            Context context = new Context();
+            context.setVariable("otp", otp);
+            context.setVariable("expireMinutes", 5);
+
+            String html = templateEngine.process("mail/otp-email", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject("Your OTP Verification Code");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+            log.info("OTP email sent to {}", to);
+
+        } catch (Exception e) {
+            log.error("Failed to send OTP email to {}", to, e);
+            throw new RuntimeException("Failed to send OTP email", e);
+        }
+    }
+
 }
 
