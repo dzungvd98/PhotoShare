@@ -74,14 +74,14 @@ public class AuthService implements IAuthService {
         log.info("User registered successfully: {}", savedUser.getEmail());
 
 
-        mailService.sendSimpleEmail(user.getEmail(), "Verify Account", "Your verify code is: " + otpService.createOtp(user.getEmail()));
+        mailService.sendOtpEmail(user.getEmail(),  otpService.createOtp(user.getEmail()));
         log.info("Email verified is sent: {}", savedUser.getEmail());
 
         return UserResponse.builder()
                 .email(savedUser.getEmail())
                 .roleName(savedUser.getRole().getRoleName().toUpperCase())
                 .status(UserStatus.PENDING_VERIFICATION.toString())
-                .path("/auth/verify?mid=" + mfaChallengeId)
+                .path("/auth/verify?mid=" + mfaChallengeId + "&purpose=register")
                 .build();
     }
 
@@ -112,5 +112,4 @@ public class AuthService implements IAuthService {
 
         return true;
     }
-
 }
