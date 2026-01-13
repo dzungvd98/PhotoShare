@@ -56,10 +56,10 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user")
-    public ResponseEntity<Void> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest) {
+    public ResponseEntity<Void> logout(HttpServletRequest request,  @CookieValue("refresh_token") String refreshToken) {
         int userId = getUserIdFromToken();
         String ipAddress = getClientIpAddress(request);
-        logoutUseCase.execute(userId, logoutRequest.getRefreshToken(), ipAddress);
+        logoutUseCase.execute(userId, refreshToken, ipAddress);
         return ResponseEntityBuilder.noContent();
     }
 
