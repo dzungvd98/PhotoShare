@@ -56,7 +56,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user")
-    public ResponseEntity<Void> logout(HttpServletRequest request,  @CookieValue("refresh_token") String refreshToken) {
+    public ResponseEntity<Void> logout(HttpServletRequest request,  @CookieValue(name = "refresh_token", required = false) String refreshToken) {
         int userId = getUserIdFromToken();
         String ipAddress = getClientIpAddress(request);
         logoutUseCase.execute(userId, refreshToken, ipAddress);
@@ -108,7 +108,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
-            @CookieValue("refresh_token") String refreshToken,
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
             HttpServletRequest httpRequest) {
 
         String ipAddress = getClientIpAddress(httpRequest);
