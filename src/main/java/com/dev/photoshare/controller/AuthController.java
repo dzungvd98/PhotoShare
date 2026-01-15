@@ -60,6 +60,7 @@ public class AuthController {
         int userId = getUserIdFromToken();
         String ipAddress = getClientIpAddress(request);
         logoutUseCase.execute(userId, refreshToken, ipAddress);
+        cookieUtils.clearRefreshCookie();
         return ResponseEntityBuilder.noContent();
     }
 
