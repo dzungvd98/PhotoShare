@@ -12,15 +12,15 @@ public class CookieUtils {
         return ResponseCookie.from("refresh_token", token)
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth/refresh")
-                .sameSite("Strict")
+                .path("/")
+                .sameSite("None")
                 .maxAge(Duration.ofDays(30))
                 .build();
     }
 
     public ResponseCookie clearRefreshCookie() {
         return ResponseCookie.from("refresh_token", "")
-                .path("/auth/refresh")
+                .path("/")
                 .maxAge(0)
                 .build();
     }
