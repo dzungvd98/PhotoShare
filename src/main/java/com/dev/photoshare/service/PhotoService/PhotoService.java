@@ -46,9 +46,17 @@ public class PhotoService implements IPhotoService {
     public long uploadPhoto(int userId, PhotoUploadRequest req, MultipartFile image) throws IOException {
         if (image == null || image.isEmpty()) return 0;
 
-        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+        String ext = Optional.ofNullable(image.getOriginalFilename())
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(f.lastIndexOf(".")))
+                .orElse("");
+
+        String fileName = UUID.randomUUID() + ext;
+
+        Path uploadPath = Paths.get(UPLOAD_DIR); // = /upload/images
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
 
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -57,7 +65,7 @@ public class PhotoService implements IPhotoService {
 
         Photos photo = new Photos();
         photo.setDescription(req.getDescription());
-        photo.setUrl("/uploads/" + fileName);
+        photo.setUrl("/images/" + fileName); // ✅ KHỚP WebConfig
         photo.setFileSize(image.getSize());
         photo.setStatus(PhotoStatus.PENDING);
         photo.setModerationStatus(ModerationStatus.PENDING);
