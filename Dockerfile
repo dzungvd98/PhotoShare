@@ -7,7 +7,10 @@ WORKDIR /app
 # Copy JAR vào container
 COPY target/photoshare-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose port ứng dụng (nếu muốn)
+# Tạo thư mục upload và set quyền (THÊM DÒNG NÀY)
+RUN mkdir -p /upload/images && chmod -R 777 /upload
+
+# Expose port ứng dụng
 EXPOSE 8080
 
 # Chạy ứng dụng
