@@ -2,6 +2,10 @@ spring:
   application:
     name: photoshare
 
+  web:
+    resources:
+      static-locations: file:/upload/
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/photoshare?currentSchema=public}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
