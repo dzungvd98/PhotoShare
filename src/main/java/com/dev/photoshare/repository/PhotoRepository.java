@@ -57,6 +57,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
                     p.description AS description,
                     p.url AS photoUrl,
                     u.id AS creatorId,
+                    u.slug as slug,
                     pf.display_name AS creatorName,
                     pf.avatar_url AS ownerAvatar,
                     s.like_count AS likeCount,
@@ -112,7 +113,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
                     p.title AS title,
                     p.description AS description,
                     p.url AS photoUrl,
-        
+                    u.slug as slug,
                     u.id AS creatorId,
                     pf.display_name AS creatorName,
                     pf.avatar_url AS ownerAvatar,
@@ -171,7 +172,7 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
                     p.title AS title,
                     p.description AS description,
                     p.url AS photoUrl,
-        
+                     u.slug as slug,
                     u.id AS creatorId,
                     pf.display_name AS creatorName,
                     pf.avatar_url AS ownerAvatar,

@@ -10,6 +10,7 @@ import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.*;
 import com.dev.photoshare.service.R2Service.R2Service;
 import com.dev.photoshare.service.UserStatsService.UserStatsService;
+import com.dev.photoshare.utils.SlugUtil;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
 import com.dev.photoshare.utils.enums.UserStatus;
@@ -50,12 +51,17 @@ public class PhotoService implements IPhotoService {
 
         String imageUrl = r2Service.upload(image);
 
+        String alt = SlugUtil.toSlug(
+                Optional.ofNullable(req.getDescription()).orElse("photo")
+        );
+
         Users user = userRepository.getReferenceById(userId);
 
         Photos photo = new Photos();
         photo.setDescription(req.getDescription());
         photo.setUrl(imageUrl);            // ✅ URL R2
         photo.setFileSize(image.getSize());
+        photo.setSlug(alt);
         photo.setStatus(PhotoStatus.PENDING);
         photo.setModerationStatus(ModerationStatus.PENDING);
         photo.setIsArchived(false);
@@ -139,6 +145,7 @@ public class PhotoService implements IPhotoService {
                 .tags(listTagsResponse)
                 .creatorName(creatorName)
                 .likeCount(stats.getLikeCount())
+                .slug(photo.getSlug())
                 .commentCount(stats.getCommentCount())
                 .ownerId(creator.getId())
                 .ownerAvatar(creator.getProfile().getAvatarUrl())
