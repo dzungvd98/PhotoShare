@@ -8,6 +8,7 @@ import com.dev.photoshare.entity.*;
 import com.dev.photoshare.exception.BusinessException;
 import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.*;
+import com.dev.photoshare.service.R2Service.R2Service;
 import com.dev.photoshare.service.UserStatsService.UserStatsService;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
@@ -41,31 +42,19 @@ public class PhotoService implements IPhotoService {
     private final UserStatsService userStatsService;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
+    private final R2Service r2Service;
 
     @Transactional
     public long uploadPhoto(int userId, PhotoUploadRequest req, MultipartFile image) throws IOException {
         if (image == null || image.isEmpty()) return 0;
 
-        String ext = Optional.ofNullable(image.getOriginalFilename())
-                .filter(f -> f.contains("."))
-                .map(f -> f.substring(f.lastIndexOf(".")))
-                .orElse("");
-
-        String fileName = UUID.randomUUID() + ext;
-
-        Path uploadPath = Paths.get(UPLOAD_DIR); // = /upload/images
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        Path filePath = uploadPath.resolve(fileName);
-        Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        String imageUrl = r2Service.upload(image);
 
         Users user = userRepository.getReferenceById(userId);
 
         Photos photo = new Photos();
         photo.setDescription(req.getDescription());
-        photo.setUrl("/images/" + fileName); // ✅ KHỚP WebConfig
+        photo.setUrl(imageUrl);            // ✅ URL R2
         photo.setFileSize(image.getSize());
         photo.setStatus(PhotoStatus.PENDING);
         photo.setModerationStatus(ModerationStatus.PENDING);
