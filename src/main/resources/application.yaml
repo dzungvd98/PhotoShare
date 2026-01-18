@@ -98,3 +98,13 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+
+cloudflare:
+  r2:
+    endpoint: ${R2_ENDPOINT:https://01a277f1ae20f2a0cacfa73ecef42c39.r2.cloudflarestorage.com}
+    bucket: ${R2_BUCKET:photoshare-images}
+    public-url: ${R2_PUBLIC_URL:https://pub-380d6c23713544b4a4d6f49fd15a3ef5.r2.dev}
+    access-key: ${R2_ACCESS_KEY:01a277f1ae20f2a0cacfa73ecef42c39}
+    secret-key: ${R2_SECRET_KEY:pGrraquIN3noMzmD-oILgYMiQkErbABiW5hhnL_Q}
+    region: auto
+
