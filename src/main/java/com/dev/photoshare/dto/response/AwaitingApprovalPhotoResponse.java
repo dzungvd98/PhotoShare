@@ -18,5 +18,6 @@ public class AwaitingApprovalPhotoResponse {
     private List<String> tags;
     private LocalDateTime uploadDate;
     private String imgUrl;
+    private String slug;
 
 }

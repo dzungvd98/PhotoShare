@@ -15,5 +15,6 @@ public class PhotoDetailResponse {
     private String photoUrl;
     private long likeCount;
     private long commentCount;
+    private String slug;
     private List<String> tags;
 }

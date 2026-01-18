@@ -36,6 +36,9 @@ public class Photos {
     @Column(length = 255)
     private String title;
 
+    @Column(length = 255)
+    private String slug;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

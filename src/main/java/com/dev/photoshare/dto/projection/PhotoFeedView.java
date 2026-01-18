@@ -14,4 +14,5 @@ public interface PhotoFeedView {
 
     long getLikeCount();
     long getCommentCount();
+    String getSlug();
 }
