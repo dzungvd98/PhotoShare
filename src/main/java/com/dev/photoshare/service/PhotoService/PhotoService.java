@@ -58,6 +58,7 @@ public class PhotoService implements IPhotoService {
         Users user = userRepository.getReferenceById(userId);
 
         Photos photo = new Photos();
+        photo.setUser(user);
         photo.setDescription(req.getDescription());
         photo.setUrl(imageUrl);            // ✅ URL R2
         photo.setFileSize(image.getSize());
