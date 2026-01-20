@@ -278,7 +278,7 @@ public class PhotoService implements IPhotoService {
             photo.setStats(stats);
         }
 
-        photo.setIsArchived(true);
+        photo.setIsArchived(false);
 
         Users creator = photo.getUser();
         userStatsService.increasePostCount(creator);
