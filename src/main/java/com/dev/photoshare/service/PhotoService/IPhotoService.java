@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 public interface IPhotoService {
-    PhotoDetailResponse getPhotoDetail(long photoId);
+    PhotoDetailResponse getPhotoDetail(long photoId, int userId);
     PageResponse<AwaitingApprovalPhotoResponse> getListAwaitingApprovalPhoto(int pageNumber, int pageSize);
     PageResponse<PhotoFeedView> getListPopularPhotos(int pageNumber, int pageSize);
     PageResponse<PhotoFeedView> getListFollowPhotos(int userId, int pageNumber, int pageSize);

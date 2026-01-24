@@ -17,4 +17,5 @@ public class PhotoDetailResponse {
     private long commentCount;
     private String slug;
     private List<String> tags;
+    private boolean isLiked;
 }

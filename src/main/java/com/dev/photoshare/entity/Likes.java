@@ -32,9 +32,6 @@ public class Likes {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @Column(name = "likeable_type", nullable = false)
-    private LikeableType likeableType;
-
     @Column(name = "likeable_id", nullable = false)
     private Long likeableId;
 

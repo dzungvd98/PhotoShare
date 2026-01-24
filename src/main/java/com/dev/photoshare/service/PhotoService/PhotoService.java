@@ -14,7 +14,6 @@ import com.dev.photoshare.utils.SlugUtil;
 import com.dev.photoshare.utils.enums.ModerationStatus;
 import com.dev.photoshare.utils.enums.PhotoStatus;
 import com.dev.photoshare.utils.enums.UserStatus;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,10 +25,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,6 +39,7 @@ public class PhotoService implements IPhotoService {
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final R2Service r2Service;
+    private final LikeRepository likeRepository;
 
     @Transactional
     public long uploadPhoto(int userId, PhotoUploadRequest req, MultipartFile image) throws IOException {
@@ -120,7 +116,7 @@ public class PhotoService implements IPhotoService {
     }
 
     @Override
-    public PhotoDetailResponse getPhotoDetail(long photoId) {
+    public PhotoDetailResponse getPhotoDetail(long photoId, int userId) {
         Photos photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Photo", "id", photoId));
 
@@ -140,6 +136,8 @@ public class PhotoService implements IPhotoService {
                 .map(Tags::getTagName)
                 .toList();
 
+        boolean  isLiked = likeRepository.existsByUserIdAndLikeableId(userId, photoId);
+
         return PhotoDetailResponse.builder()
                 .photoUrl(photo.getUrl())
                 .description(photo.getDescription())
@@ -150,6 +148,7 @@ public class PhotoService implements IPhotoService {
                 .commentCount(stats.getCommentCount())
                 .ownerId(creator.getId())
                 .ownerAvatar(creator.getProfile().getAvatarUrl())
+                .isLiked(isLiked)
                 .build();
     }
 
