@@ -9,6 +9,7 @@ import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.service.CommentService.ICommentService;
+import com.dev.photoshare.service.LikeService.ILikeService;
 import com.dev.photoshare.service.PhotoService.IPhotoService;
 import com.dev.photoshare.utils.ResponseEntityBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,7 @@ import java.io.IOException;
 public class PhotoController {
     private final IPhotoService photoService;
     private final ICommentService commentService;
+    private final ILikeService likeService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> uploadPhoto(
@@ -68,7 +70,8 @@ public class PhotoController {
 
     @GetMapping("/{photoId}")
     public ResponseEntity<ApiResponse<PhotoDetailResponse>> getPhotoDetail(@PathVariable long photoId) {
-       return ResponseEntityBuilder.ok(photoService.getPhotoDetail(photoId));
+        int userId = getUserIdFromToken();
+       return ResponseEntityBuilder.ok(photoService.getPhotoDetail(photoId, userId));
     }
 
     @PatchMapping("/{photoId}/review")
@@ -137,6 +140,12 @@ public class PhotoController {
             @Max(value = 100, message = "pageSize tối đa là 100") int pageSize) {
         PageResponse<CommentProjection> reponse = commentService.getMainComments(photoId, pageNum - 1, pageSize);
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d bình luận", reponse.getTotalElements()), reponse);
+    }
+
+    @PostMapping("/{photoId}/likes")
+    public ResponseEntity<ApiResponse<Boolean>> toggleLike(@PathVariable long photoId) {
+        int userId = getUserIdFromToken();
+        return ResponseEntityBuilder.ok(likeService.toggleLike(userId, photoId));
     }
 
     private int getUserIdFromToken() {
