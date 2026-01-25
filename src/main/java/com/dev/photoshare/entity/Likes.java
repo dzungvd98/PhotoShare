@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 @Table(
         indexes = {
             @Index(name = "idx_unique_like",
-                columnList = "user_id, likeable_type, likeable_id",
+                columnList = "user_id, likeable_id",
                 unique = true),
             @Index(name = "idx_likeable_recent",
-                columnList = "likeable_type, likeable_id, created_at")
+                columnList = "likeable_id, created_at")
 })
 @Getter
 @Setter
