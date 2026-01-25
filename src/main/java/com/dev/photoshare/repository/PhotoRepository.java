@@ -40,7 +40,6 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
         SELECT p FROM Photos p 
         JOIN Likes l 
             ON p.id = l.likeableId 
-            AND l.likeableType = com.dev.photoshare.utils.enums.LikeableType.PHOTO
         WHERE l.user.id = :userId
         ORDER BY p.createdAt DESC
     """)
