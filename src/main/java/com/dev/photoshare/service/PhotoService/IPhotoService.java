@@ -20,4 +20,6 @@ public interface IPhotoService {
     PhotoResponse updatePhoto(int userId, long photoId, PhotoUpdateRequest request);
     void deletePhoto(long photoId, int userId);
 
+
+
 }
