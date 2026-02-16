@@ -148,6 +148,8 @@ public class PhotoController {
         return ResponseEntityBuilder.ok(likeService.toggleLike(userId, photoId));
     }
 
+
+
     private int getUserIdFromToken() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

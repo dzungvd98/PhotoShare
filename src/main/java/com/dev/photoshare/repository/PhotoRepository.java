@@ -211,6 +211,5 @@ public interface PhotoRepository extends JpaRepository<Photos,Long> {
     """)
     public void softDeletePhotoById(@Param("photoId") long photoId);
 
-
-
+    Long countByStatus(PhotoStatus status);
 }
