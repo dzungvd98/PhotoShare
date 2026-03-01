@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("api/user")
+@RequestMapping("api/users")
 @RequiredArgsConstructor
-@Tag(name = "Profile Controller", description = "Profile APIs")
+@Tag(name = "User Controller", description = "User APIs")
 public class UserController {
     private final IUserService userService;
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<LstProfileResponse>>> getAllUsers(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
