@@ -1,5 +1,6 @@
 package com.dev.photoshare.entity;
 
+import com.dev.photoshare.utils.enums.ActionType;
 import com.dev.photoshare.utils.enums.TargetType;
 import com.dev.photoshare.utils.enums.ViolationReason;
 import com.dev.photoshare.utils.enums.ViolationReportStatus;
@@ -7,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -55,6 +57,17 @@ public class ViolationReport {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ViolationReportStatus status = ViolationReportStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action_type")
+    private ActionType actionType;
+
+    @Column(name = "note", columnDefinition = "TEXT")
+    private String note;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mod_id")
+    private Users mod;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -1,6 +1,7 @@
 package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.EditProfileRequest;
+import com.dev.photoshare.dto.request.UserSearchRequest;
 import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.service.ProfileService.ProfileService;
 import com.dev.photoshare.service.UserService.IUserService;
@@ -23,8 +24,8 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<LstProfileResponse>>> getAllUsers(
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
-        PageResponse<LstProfileResponse> response = userService.lstProfile(pageNum, pageSize);
+            @RequestParam(defaultValue = "10") int pageSize, UserSearchRequest req) {
+        PageResponse<LstProfileResponse> response = userService.lstProfile(pageNum, pageSize, req);
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d user", response.getTotalElements()),  response);
     }
 
@@ -37,15 +38,12 @@ public class UserController {
         return ResponseEntityBuilder.ok("Trạng thái đã được thay đổi", saveStatus);
     }
 
-    @PutMapping("/{id}/role")
+    @PutMapping("/{userId}/role")
     public ResponseEntity<ApiResponse<UserResponse>> updateUserRole(@PathVariable Integer userId,
                                                               @RequestParam("roleName")  String roleName) {
         UserResponse savedUser = userService.updateUserRole(userId,  roleName);
         return ResponseEntityBuilder.ok("Vai trò người dùng đã được thay đổi", savedUser);
     }
-
-
-
 }
 
 
