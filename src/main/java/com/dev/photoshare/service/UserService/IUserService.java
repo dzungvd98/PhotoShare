@@ -1,12 +1,12 @@
 package com.dev.photoshare.service.UserService;
 
+import com.dev.photoshare.dto.request.UserSearchRequest;
 import com.dev.photoshare.dto.response.LstProfileResponse;
-import com.dev.photoshare.dto.response.PageData;
 import com.dev.photoshare.dto.response.PageResponse;
 import com.dev.photoshare.dto.response.UserResponse;
 
 public interface IUserService {
-    PageResponse<LstProfileResponse> lstProfile(int pageNumber, int pageSize);
+    PageResponse<LstProfileResponse> lstProfile(int pageNumber, int pageSize,  UserSearchRequest req);
 
     String updateUserStatus(Integer userId, Integer status);
 

@@ -2,15 +2,20 @@ package com.dev.photoshare.service.ViolationReportService;
 
 import com.dev.photoshare.dto.request.ReportViolationRequest;
 import com.dev.photoshare.dto.request.ViolationHandleRequest;
+import com.dev.photoshare.dto.request.ViolationSearchRequest;
+import com.dev.photoshare.dto.response.ListReportResponse;
+import com.dev.photoshare.dto.response.PageResponse;
 import com.dev.photoshare.dto.response.ViolationHandleResponse;
 import com.dev.photoshare.dto.response.ViolationReportResponse;
 import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.entity.ViolationAction;
 import com.dev.photoshare.entity.ViolationReport;
+import com.dev.photoshare.exception.BusinessException;
 import com.dev.photoshare.exception.ResourceConflictException;
 import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.*;
+import com.dev.photoshare.repository.specification.ViolationReportSpecification;
 import com.dev.photoshare.utils.enums.ActionType;
 import com.dev.photoshare.utils.enums.TargetType;
 import com.dev.photoshare.utils.enums.UserStatus;
@@ -18,6 +23,9 @@ import com.dev.photoshare.utils.enums.ViolationReportStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +43,23 @@ public class ViolationReportService implements IViolationReportService {
 
     private final static int NUM_DAY_REPORT = 3;
 
+    @Override
+    public PageResponse<ListReportResponse> getViolationReports(Pageable pageable, ViolationSearchRequest req) {
+        Specification<ViolationReport> specification = ViolationReportSpecification.filterViolationReport(req);
+
+        Page<ViolationReport> page = violationReportRepository.findAll(specification, pageable);
+
+        Page<ListReportResponse> result = page.map(this::mapToReportResponse);
+
+        return PageResponse.from(result);
+    }
+
     public ViolationReportResponse sendViolationReport(int userReportId, ReportViolationRequest request) {
+
+        if (violationReportRepository.existsByReporterIdAndTargetTypeAndTargetId(
+                userReportId, request.getTargetType(), request.getTargetId())) {
+            throw new BusinessException("Bạn chỉ có thể gửi báo cáo 1 lần cho 1 bài viết");
+        }
         Users user = userRepository.getReferenceById(userReportId);
 
         ViolationReport report = new ViolationReport();
@@ -133,7 +157,15 @@ public class ViolationReportService implements IViolationReportService {
         }
     }
 
-
-
-
+    private ListReportResponse mapToReportResponse(ViolationReport violationReport) {
+        return ListReportResponse.builder()
+                .reporterId(violationReport.getReporter().getId())
+                .createdAt(violationReport.getCreatedAt())
+                .updatedAt(violationReport.getUpdatedAt())
+                .status(violationReport.getStatus())
+                .targetId(violationReport.getTargetId())
+                .targetType(violationReport.getTargetType())
+                .reportedPersonId(violationReport.getReportedPerson().getId())
+                .build();
+    }
 }

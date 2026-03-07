@@ -1,7 +1,7 @@
 package com.dev.photoshare.service.UserService;
 
+import com.dev.photoshare.dto.request.UserSearchRequest;
 import com.dev.photoshare.dto.response.LstProfileResponse;
-import com.dev.photoshare.dto.response.PageData;
 import com.dev.photoshare.dto.response.PageResponse;
 import com.dev.photoshare.dto.response.UserResponse;
 import com.dev.photoshare.entity.Profiles;
@@ -12,17 +12,16 @@ import com.dev.photoshare.exception.BusinessException;
 import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.RoleRepository;
 import com.dev.photoshare.repository.UserRepository;
+import com.dev.photoshare.repository.specification.UserSpecification;
 import com.dev.photoshare.utils.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.text.ParsePosition;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,10 +31,12 @@ public class UserService implements IUserService{
     private final RoleRepository roleRepository;
 
     @Override
-    public PageResponse<LstProfileResponse> lstProfile(int pageNumber, int pageSize) {
+    public PageResponse<LstProfileResponse> lstProfile(int pageNumber, int pageSize, UserSearchRequest req) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
 
-        Page<Users> page = userRepository.findAllWithStats(pageable);
+        Specification<Users> spec = UserSpecification.filter(req);
+
+        Page<Users> page = userRepository.findAll(spec, pageable);
 
         Page<LstProfileResponse> result = page.map(this::mapToProfileResponse);
 
@@ -66,7 +67,7 @@ public class UserService implements IUserService{
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "UserId", userId));
 
-        if(role.getRoleName().equals(roleName)){
+        if(user.getRole().getRoleName().equals(roleName)){
             throw new BusinessException("New role need different current role");
         }
 
@@ -104,6 +105,7 @@ public class UserService implements IUserService{
                 .followersCount(stats != null ? stats.getFollowersCount() : 0)
                 .displayName(profile != null ? profile.getDisplayName() : null)
                 .avatarUrl(profile != null ? profile.getAvatarUrl() : null)
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }

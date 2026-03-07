@@ -5,6 +5,7 @@ import com.dev.photoshare.utils.enums.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,15 +15,15 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<Users,Integer> {
+public interface UserRepository extends JpaRepository<Users,Integer>, JpaSpecificationExecutor<Users> {
 
     Optional<Users> findByEmail(String email);
     Optional<Users> findByMfaSecret(String mfaSecret);
 
     Boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM Users u LEFT JOIN FETCH u.userStats")
-    Page<Users> findAllWithStats(Pageable pageable);
+    @Query("SELECT u FROM Users u LEFT JOIN FETCH u.userStats WHERE u.status = :status ORDER BY u.createdAt")
+    Page<Users> findAllWithStats(Pageable pageable, @Param("status") UserStatus status);
 
     @Modifying
     @Query("UPDATE Users u SET u.failedLoginAttempts = u.failedLoginAttempts + 1, u.updatedAt = :now WHERE u.id = :userId")
