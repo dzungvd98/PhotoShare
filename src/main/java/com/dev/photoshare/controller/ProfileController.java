@@ -5,6 +5,8 @@ import com.dev.photoshare.dto.response.*;
 import com.dev.photoshare.service.ProfileService.ProfileService;
 import com.dev.photoshare.utils.ResponseEntityBuilder;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +28,12 @@ public class ProfileController {
     @GetMapping("/users/{userId}/posts")
     public ResponseEntity<ApiResponse<PageResponse<PhotoResponse>>> getListPostsOfProfile(
             @PathVariable int userId,
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "1")
+            @Min(value = 1, message = "pageNum phải >= 1")
+            int pageNum,
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "pageSize phải >= 1")
+            @Max(value = 100, message = "pageSize tối đa là 100") int pageSize) {
         PageResponse<PhotoResponse> pageResponse = profileService.getListPhotoPostedOfProfile(userId, pageNum, pageSize);
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d ảnh", pageResponse.getTotalElements()), pageResponse);
     }
@@ -35,8 +41,12 @@ public class ProfileController {
     @GetMapping("/users/{userId}/liked")
     public ResponseEntity<ApiResponse<PageResponse<PhotoResponse>>> getListLikedPhotosOfProfile(
             @PathVariable int userId,
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "1")
+            @Min(value = 1, message = "pageNum phải >= 1")
+            int pageNum,
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "pageSize phải >= 1")
+            @Max(value = 100, message = "pageSize tối đa là 100") int pageSize) {
         PageResponse<PhotoResponse> pageResponse = profileService.getListPhotoLikedOfProfile(userId, pageNum, pageSize);
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d ảnh", pageResponse.getTotalElements()), pageResponse);
     }
