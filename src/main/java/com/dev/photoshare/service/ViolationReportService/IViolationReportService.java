@@ -1,5 +1,6 @@
 package com.dev.photoshare.service.ViolationReportService;
 
+import com.dev.photoshare.dto.projection.ViolationReportView;
 import com.dev.photoshare.dto.request.ReportViolationRequest;
 import com.dev.photoshare.dto.request.ViolationHandleRequest;
 import com.dev.photoshare.dto.request.ViolationSearchRequest;
@@ -11,7 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 
 public interface IViolationReportService {
-    PageResponse<ListReportResponse> getViolationReports(Pageable pageable, ViolationSearchRequest violationSearchRequest);
+    PageResponse<ViolationReportView> getViolationReports(Pageable pageable, ViolationSearchRequest violationSearchRequest);
 
     ViolationReportResponse sendViolationReport(int userReportId, ReportViolationRequest request);
 

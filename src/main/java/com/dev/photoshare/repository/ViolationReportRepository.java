@@ -13,4 +13,5 @@ public interface ViolationReportRepository extends JpaRepository<ViolationReport
             TargetType targetType,
             Long targetId
     );
+
 }

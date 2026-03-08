@@ -1,13 +1,12 @@
 package com.dev.photoshare.service.ViolationReportService;
 
+import com.dev.photoshare.dto.projection.ViolationReportView;
 import com.dev.photoshare.dto.request.ReportViolationRequest;
 import com.dev.photoshare.dto.request.ViolationHandleRequest;
 import com.dev.photoshare.dto.request.ViolationSearchRequest;
-import com.dev.photoshare.dto.response.ListReportResponse;
 import com.dev.photoshare.dto.response.PageResponse;
 import com.dev.photoshare.dto.response.ViolationHandleResponse;
 import com.dev.photoshare.dto.response.ViolationReportResponse;
-import com.dev.photoshare.entity.Photos;
 import com.dev.photoshare.entity.Users;
 import com.dev.photoshare.entity.ViolationAction;
 import com.dev.photoshare.entity.ViolationReport;
@@ -18,9 +17,7 @@ import com.dev.photoshare.repository.*;
 import com.dev.photoshare.repository.specification.ViolationReportSpecification;
 import com.dev.photoshare.utils.enums.ActionType;
 import com.dev.photoshare.utils.enums.TargetType;
-import com.dev.photoshare.utils.enums.UserStatus;
 import com.dev.photoshare.utils.enums.ViolationReportStatus;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,7 +26,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.dev.photoshare.utils.enums.ModerationAction.BAN_USER;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -44,12 +41,15 @@ public class ViolationReportService implements IViolationReportService {
     private final static int NUM_DAY_REPORT = 3;
 
     @Override
-    public PageResponse<ListReportResponse> getViolationReports(Pageable pageable, ViolationSearchRequest req) {
-        Specification<ViolationReport> specification = ViolationReportSpecification.filterViolationReport(req);
+    public PageResponse<ViolationReportView> getViolationReports(Pageable pageable, ViolationSearchRequest req) {
+        Specification<ViolationReport> specification =
+                ViolationReportSpecification.filterViolationReport(req);
 
-        Page<ViolationReport> page = violationReportRepository.findAll(specification, pageable);
+        Page<ViolationReport> page =
+                violationReportRepository.findAll(specification, pageable);
 
-        Page<ListReportResponse> result = page.map(this::mapToReportResponse);
+        Page<ViolationReportView> result =
+                page.map(this::mapToView);
 
         return PageResponse.from(result);
     }
@@ -157,15 +157,70 @@ public class ViolationReportService implements IViolationReportService {
         }
     }
 
-    private ListReportResponse mapToReportResponse(ViolationReport violationReport) {
-        return ListReportResponse.builder()
-                .reporterId(violationReport.getReporter().getId())
-                .createdAt(violationReport.getCreatedAt())
-                .updatedAt(violationReport.getUpdatedAt())
-                .status(violationReport.getStatus())
-                .targetId(violationReport.getTargetId())
-                .targetType(violationReport.getTargetType())
-                .reportedPersonId(violationReport.getReportedPerson().getId())
-                .build();
+    private ViolationReportView mapToView(ViolationReport r) {
+
+        return new ViolationReportView() {
+
+            @Override
+            public Integer getReporterId() {
+                return r.getReporter() != null ? r.getReporter().getId() : null;
+            }
+
+            @Override
+            public String getReporterDisplayName() {
+                return r.getReporter() != null && r.getReporter().getProfile() != null
+                        ? r.getReporter().getProfile().getDisplayName()
+                        : null;
+            }
+
+            @Override
+            public Integer getReportedPersonId() {
+                return r.getReportedPerson() != null ? r.getReportedPerson().getId() : null;
+            }
+
+            @Override
+            public String getReportedPersonDisplayName() {
+                return r.getReportedPerson() != null && r.getReportedPerson().getProfile() != null
+                        ? r.getReportedPerson().getProfile().getDisplayName()
+                        : null;
+            }
+
+            @Override
+            public Integer getModId() {
+                return r.getMod() != null ? r.getMod().getId() : null;
+            }
+
+            @Override
+            public String getModDisplayName() {
+                return r.getMod() != null && r.getMod().getProfile() != null
+                        ? r.getMod().getProfile().getDisplayName()
+                        : null;
+            }
+
+            @Override
+            public ViolationReportStatus getStatus() {
+                return r.getStatus();
+            }
+
+            @Override
+            public Long getTargetId() {
+                return r.getTargetId();
+            }
+
+            @Override
+            public LocalDateTime getCreatedAt() {
+                return r.getCreatedAt();
+            }
+
+            @Override
+            public LocalDateTime getUpdatedAt() {
+                return r.getUpdatedAt();
+            }
+
+            @Override
+            public TargetType getTargetType() {
+                return r.getTargetType();
+            }
+        };
     }
 }

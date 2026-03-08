@@ -8,6 +8,8 @@ import com.dev.photoshare.service.UserService.IUserService;
 import com.dev.photoshare.service.UserService.UserService;
 import com.dev.photoshare.utils.ResponseEntityBuilder;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +25,12 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<LstProfileResponse>>> getAllUsers(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize, UserSearchRequest req) {
+            @RequestParam(defaultValue = "1")
+            @Min(value = 1, message = "pageNum phải >= 1")
+            int pageNum,
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "pageSize phải >= 1")
+            @Max(value = 100, message = "pageSize tối đa là 100") int pageSize, UserSearchRequest req) {
         PageResponse<LstProfileResponse> response = userService.lstProfile(pageNum, pageSize, req);
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d user", response.getTotalElements()),  response);
     }
