@@ -16,5 +16,5 @@ public interface IViolationReportService {
 
     ViolationReportResponse sendViolationReport(int userReportId, ReportViolationRequest request);
 
-    ViolationHandleResponse handleViolationReport(long id, ViolationHandleRequest request);
+    ViolationHandleResponse handleViolationReport(long id, ViolationHandleRequest request, int userId);
 }

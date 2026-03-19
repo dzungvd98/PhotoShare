@@ -1,15 +1,24 @@
 package com.dev.photoshare.controller;
 
 import com.dev.photoshare.dto.request.EditProfileRequest;
+import com.dev.photoshare.dto.request.PhotoUploadRequest;
 import com.dev.photoshare.dto.response.*;
+import com.dev.photoshare.security.CustomUserDetails;
 import com.dev.photoshare.service.ProfileService.ProfileService;
 import com.dev.photoshare.utils.ResponseEntityBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 
 @RestController
@@ -51,12 +60,26 @@ public class ProfileController {
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d ảnh", pageResponse.getTotalElements()), pageResponse);
     }
 
-    @PutMapping("/users/{userId}")
+    @PutMapping("/edit")
     public ResponseEntity<ApiResponse<EditProfileResponse>> editProfile(
-            @PathVariable int userId,
-            @RequestBody EditProfileRequest editProfileRequest
-    ) {
-        return ResponseEntityBuilder.ok("Cập nhật thành công", profileService.editProfile(userId, editProfileRequest));
+            @RequestPart("data") String editProfileRequest,
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) throws IOException {
+        int userId = getUserIdFromToken();
+        ObjectMapper objectMapper = new ObjectMapper();
+        EditProfileRequest request = objectMapper.readValue(editProfileRequest, EditProfileRequest.class);
+        return ResponseEntityBuilder.ok("Cập nhật thành công", profileService.editProfile(userId, request, file));
+    }
+
+    private int getUserIdFromToken() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()
+                || !(auth.getPrincipal() instanceof CustomUserDetails userDetails)) {
+            throw new AccessDeniedException("Không có quyền truy cập");
+        }
+
+        return userDetails.getId();
     }
 
 }

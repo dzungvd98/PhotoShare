@@ -18,4 +18,5 @@ public class PhotoDetailResponse {
     private String slug;
     private List<String> tags;
     private boolean isLiked;
+    private boolean  isFollowCreator;
 }

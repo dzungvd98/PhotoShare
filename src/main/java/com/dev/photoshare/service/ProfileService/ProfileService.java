@@ -10,6 +10,7 @@ import com.dev.photoshare.exception.ResourceNotFoundException;
 import com.dev.photoshare.repository.PhotoRepository;
 import com.dev.photoshare.repository.ProfileRepository;
 import com.dev.photoshare.repository.UserRepository;
+import com.dev.photoshare.service.R2Service.R2Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -28,6 +31,7 @@ public class ProfileService implements IProfileService{
     private final UserRepository userRepository;
     private final PhotoRepository photoRepository;
     private final ProfileRepository profileRepository;
+    private final R2Service r2Service;
 
     @Override
     public ProfileResponse getUserProfileProfile(int userId) {
@@ -71,7 +75,7 @@ public class ProfileService implements IProfileService{
     }
 
     @Transactional
-    public EditProfileResponse editProfile(int userId, EditProfileRequest editProfileRequest) {
+    public EditProfileResponse editProfile(int userId, EditProfileRequest editProfileRequest, MultipartFile file ) throws IOException {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
 
@@ -81,14 +85,14 @@ public class ProfileService implements IProfileService{
             profile.setDisplayName(editProfileRequest.getDisplayName());
         }
 
-        if(!StringUtils.hasText(editProfileRequest.getAvatarUrl())) {
-            profile.setAvatarUrl(editProfileRequest.getAvatarUrl());
-        }
-
         if(!StringUtils.hasText(editProfileRequest.getBio())) {
             profile.setBio(editProfileRequest.getBio());
         }
 
+        String avatarUrl = r2Service.upload(file);
+        if(StringUtils.hasText(avatarUrl)) {
+            profile.setAvatarUrl(avatarUrl);
+        }
         Profiles savedProfile = profileRepository.save(profile);
 
         return EditProfileResponse.builder()
