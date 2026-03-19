@@ -40,6 +40,7 @@ public class FollowService implements IFollowService{
         if (follow == null) {
             Follows newFollow = new Follows();
             newFollow.setFollowed(target);
+            newFollow.setFollower(followerId);
             followRepository.save(newFollow);
             updateUserStats(followerId, target.getId(), true);
             followedNow = true;
