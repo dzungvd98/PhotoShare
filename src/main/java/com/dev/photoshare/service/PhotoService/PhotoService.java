@@ -40,6 +40,7 @@ public class PhotoService implements IPhotoService {
     private final UserRepository userRepository;
     private final R2Service r2Service;
     private final LikeRepository likeRepository;
+    private final FollowRepository followRepository;
 
     @Transactional
     public long uploadPhoto(int userId, PhotoUploadRequest req, MultipartFile image) throws IOException {
@@ -137,6 +138,7 @@ public class PhotoService implements IPhotoService {
                 .toList();
 
         boolean  isLiked = likeRepository.existsByUserIdAndLikeableId(userId, photoId);
+        boolean isFollowerOwner  = followRepository.existsByFollowerIdAndFollowedId(userId, creator.getId());
 
         return PhotoDetailResponse.builder()
                 .photoUrl(photo.getUrl())
@@ -149,6 +151,7 @@ public class PhotoService implements IPhotoService {
                 .ownerId(creator.getId())
                 .ownerAvatar(creator.getProfile().getAvatarUrl())
                 .isLiked(isLiked)
+                .isFollowCreator(isFollowerOwner)
                 .build();
     }
 

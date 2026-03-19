@@ -57,7 +57,8 @@ public class ViolationReportController {
     @PostMapping("/{id}/handle")
     public ResponseEntity<ApiResponse<ViolationHandleResponse>> handleViolation(@PathVariable int id,
                                                                                 @RequestBody @Valid ViolationHandleRequest request) {
-        ViolationHandleResponse response = violationReportService.handleViolationReport(id, request);
+        int  userId = getUserIdFromToken();
+        ViolationHandleResponse response = violationReportService.handleViolationReport(id, request,userId);
         return ResponseEntityBuilder.ok("Báo cáo đã được xử lý", response);
     }
 

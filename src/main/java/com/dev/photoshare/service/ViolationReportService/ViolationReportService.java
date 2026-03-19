@@ -93,21 +93,20 @@ public class ViolationReportService implements IViolationReportService {
     }
 
     @Transactional
-    public ViolationHandleResponse handleViolationReport(long id, ViolationHandleRequest request) {
+    public ViolationHandleResponse handleViolationReport(long id, ViolationHandleRequest request, int userId) {
         ViolationReport reportFound = violationReportRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("violation report", "id", id));
         if(reportFound.getStatus() != ViolationReportStatus.PENDING) {
             throw new ResourceConflictException("Báo cáo đã được xử lý");
         }
-        ViolationAction action = new ViolationAction();
-        action.setReport(reportFound);
-        action.setActionType(request.getViolationAction());
-        action.setNote(request.getViolationMessage());
 
+        reportFound.setActionType(request.getViolationAction());
+        reportFound.setNote(request.getViolationMessage());
         applyViolationAction(reportFound, request.getViolationAction());
-
-        violationActionRepository.save(action);
-
         reportFound.setStatus(ViolationReportStatus.RESOLVED);
+        reportFound.setMod(new Users(userId));
+        violationReportRepository.updateAllByTargetId(reportFound.getTargetId(), request.getViolationAction(),  ViolationReportStatus.RESOLVED, userId);
+        violationReportRepository.save(reportFound);
+
 
         return ViolationHandleResponse.builder()
                 .violationAction(request.getViolationAction())
