@@ -12,6 +12,7 @@ import com.dev.photoshare.security.refresh.RefreshTokenGenerator;
 import com.dev.photoshare.security.refresh.TokenHmacUtils;
 import com.dev.photoshare.service.AuditLogService.IAuditLogService;
 import com.dev.photoshare.service.MailService.IMailService;
+import com.dev.photoshare.service.OtpService.OtpService;
 import com.dev.photoshare.service.PasswordService.IPasswordService;
 import com.dev.photoshare.service.TokenService.ITokenService;
 import com.dev.photoshare.utils.enums.SessionStatus;
@@ -42,6 +43,7 @@ public class LoginUseCase {
     private final RefreshTokenGenerator refreshTokenGenerator;
     private final TokenHmacUtils  tokenHmacUtils;
     private final IMailService mailService;
+    private final OtpService otpService;
 
     @Value("${auth.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -117,16 +119,16 @@ public class LoginUseCase {
         }
 
         // Check is account verify
-        if (user.getStatus() == UserStatus.PENDING_VERIFICATION) {
-            auditLogService.logFailedAttempt(
-                    user.getEmail(), user.getId(), ipAddress,
-                    "ACCOUNT_NOT_VERIFIED", deviceInfo
-            );
-            throw new AccountNotVerifiedException(
-                    "Please verify your email address before logging in",
-                    "/api/auth/resend-verification"
-            );
-        }
+//        if (user.getStatus() == UserStatus.PENDING_VERIFICATION) {
+//            auditLogService.logFailedAttempt(
+//                    user.getEmail(), user.getId(), ipAddress,
+//                    "ACCOUNT_NOT_VERIFIED", deviceInfo
+//            );
+//            throw new AccountNotVerifiedException(
+//                    "Please verify your email address before logging in",
+//                    "/api/auth/resend-verification"
+//            );
+//        }
     }
 
     private void handleInvalidPassword(Users user, String ipAddress,
@@ -247,9 +249,15 @@ public class LoginUseCase {
         // Check for new device/location (simplified)
         checkSecurityAlerts(user, ipAddress, deviceInfo);
 
+        boolean isRequiresVerification = user.getStatus() == UserStatus.PENDING_VERIFICATION;
+        if (isRequiresVerification) {
+            mailService.sendOtpEmail(user.getEmail(),  otpService.createOtp(user.getEmail()));
+        }
+
         // Build response
         LoginResponse loginResponse =  LoginResponse.builder()
                 .requiresMfa(false)
+                .requiresVerification(isRequiresVerification)
                 .accessToken(accessToken)
                 .tokenType("Bearer")
                 .expiresIn(tokenService.getAccessTokenExpiration())

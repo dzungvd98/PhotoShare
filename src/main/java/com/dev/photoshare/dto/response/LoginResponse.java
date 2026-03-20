@@ -21,6 +21,7 @@ public class LoginResponse {
     private UserInfo user;
     private List<String> mfaMethods;
     private String sessionToken;
+    private Boolean  requiresVerification;
 
     @Builder
     @Getter @Setter

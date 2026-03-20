@@ -33,7 +33,6 @@ import java.time.LocalDateTime;
 @Slf4j
 public class ViolationReportService implements IViolationReportService {
     private final ViolationReportRepository violationReportRepository;
-    private final ViolationActionRepository violationActionRepository;
     private final UserRepository userRepository;
     private final PhotoRepository photoRepository;
     private final CommentRepository commentRepository;
