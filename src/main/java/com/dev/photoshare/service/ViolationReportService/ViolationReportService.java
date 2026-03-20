@@ -161,7 +161,7 @@ public class ViolationReportService implements IViolationReportService {
         return new ViolationReportView() {
 
             @Override
-            public Integer getReportId() {
+            public Long getReportId() {
                 return r.getId() != null ? r.getId() : null;
             }
 
