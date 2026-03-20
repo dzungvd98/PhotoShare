@@ -162,6 +162,11 @@ public class ViolationReportService implements IViolationReportService {
 
             @Override
             public Integer getReporterId() {
+                return r.getId() != null ? r.getId() : null;
+            }
+
+            @Override
+            public Integer getReporterId() {
                 return r.getReporter() != null ? r.getReporter().getId() : null;
             }
 
