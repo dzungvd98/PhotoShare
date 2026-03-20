@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.time.LocalDateTime;
 
 public interface ViolationReportView {
-
+    Long getReportId();
     Long getTargetId();
 
     TargetType getTargetType();
