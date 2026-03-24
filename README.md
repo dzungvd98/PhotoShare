@@ -1,408 +1,282 @@
-# 📸 PhotoShare
+# PhotoShare Backend
 
-A modern, feature-rich photo sharing social media platform built with Spring Boot and contemporary web technologies. PhotoShare enables users to upload, share, and interact with photos in a secure and engaging community environment.
+Backend API cho hệ thống mạng xã hội chia sẻ ảnh, xây dựng với Spring Boot 3, PostgreSQL, Redis, JWT và Cloudflare R2.
 
----
+## 1. Công nghệ đang dùng
 
-## ✨ Features
+- Java 17
+- Spring Boot 3.5.7
+- Spring Security + JWT
+- Spring Data JPA (PostgreSQL)
+- Spring Data Redis
+- Spring Mail
+- Springdoc OpenAPI (Swagger UI)
+- Cloudflare R2 (S3-compatible)
+- Maven
+- Docker, Docker Compose
 
-### 🔐 Authentication & Security
+## 2. Tính năng chính
 
-- **JWT-based Authentication** - Secure token-based user authentication
-- **Role-Based Access Control (RBAC)** - Fine-grained permission management
-- **JWT Blacklist Service** - Token invalidation and logout management
-- **Login Attempt Tracking** - Enhanced security with login attempt monitoring
-- **OTP Support** - One-Time Password verification for sensitive operations
-- **Password Security** - Encrypted password storage and validation
+- Đăng ký, đăng nhập, refresh token, đăng xuất
+- Xác minh tài khoản bằng OTP
+- Quản lý ảnh: tạo, sửa, xóa, xem chi tiết
+- Duyệt ảnh chờ phê duyệt
+- Feed ảnh: mới nhất, phổ biến, theo dõi
+- Bình luận và trả lời bình luận
+- Like ảnh
+- Theo dõi người dùng
+- Trang cá nhân và chỉnh sửa hồ sơ
+- Quản trị người dùng: đổi trạng thái, đổi role
+- Báo cáo vi phạm và xử lý báo cáo
+- Dashboard thống kê
 
-### 📷 Photo Management
-
-- **Photo Upload & Sharing** - Users can upload and share their photos
-- **Photo Tagging** - Tag photos for better organization and discovery
-- **Photo Statistics** - Track photo views, likes, and engagement metrics
-- **Photo First View Tracking** - Monitor first-time viewers
-- **Daily View Statistics** - Analyze photo performance over time
-- **View Guard** - Control and track photo viewing permissions
-
-### 💬 Social Interaction
-
-- **Comments System** - Users can comment on photos with nested discussions
-- **Likes & Reactions** - Like and interact with photos
-- **Follow System** - Follow other users to see their content
-- **User Profiles** - Comprehensive user profile pages with statistics
-- **Notifications** - Real-time notifications for user interactions
-
-### 🏷️ Content Management
-
-- **Tag System** - Create and manage photo tags
-- **Moderation Logging** - Track content moderation activities
-- **User Statistics** - Detailed user engagement and activity metrics
-- **Comment Statistics** - Monitor comment activity and engagement
-
-### 📧 Communication
-
-- **Email Service** - Email notifications using SMTP (Brevo/SendGrid compatible)
-- **User Notifications** - In-app notification system
-
-### ⚡ Performance
-
-- **Redis Caching** - High-performance data caching with Redis
-- **Scheduled Tasks** - Background job processing with Spring Scheduling
-- **JPA Auditing** - Automatic timestamp tracking for entities
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-
-- **Java 17** - Modern Java with latest features
-- **Spring Boot 3.5.7** - Latest Spring Boot version with virtual threads support
-- **Spring Data JPA** - Object-relational mapping and database access
-- **Spring Security** - Comprehensive security framework
-- **Spring Validation** - Input validation and constraint checking
-- **PostgreSQL 15** - Reliable relational database
-- **Redis 7** - In-memory data store for caching and sessions
-- **JWT (JSON Web Tokens)** - Stateless authentication
-
-### Frontend Support
-
-- **Thymeleaf** - Server-side template engine
-
-### Build & Deployment
-
-- **Maven** - Project build automation
-- **Docker** - Containerization for consistent deployment
-- **Docker Compose** - Multi-container orchestration
-
-### Additional Libraries
-
-- Lombok - Boilerplate code reduction
-- Validation API - Data validation
-- PostgreSQL JDBC Driver
-- Redis Spring Data
-
----
-
-## 📋 Prerequisites
-
-- **Java 17** or higher
-- **Maven 3.8.9+**
-- **Docker & Docker Compose** (for containerized deployment)
-- **PostgreSQL 15** (for database)
-- **Redis 7** (for caching)
-
----
-
-## 🚀 Getting Started
-
-### Local Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/dzungvd98/PhotoShare.git
-   cd PhotoShare
-   ```
-
-2. **Configure environment variables**
-
-   Create a `.env` file in the project root:
-
-   ```env
-   SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/photoshare?currentSchema=public
-   SPRING_DATASOURCE_USERNAME=postgres
-   SPRING_DATASOURCE_PASSWORD=your_password
-   SPRING_REDIS_HOST=localhost
-   SPRING_REDIS_PORT=6379
-   SPRING_REDIS_PASSWORD=
-   MAIL_HOST=smtp-relay.brevo.com
-   MAIL_PORT=587
-   MAIL_USERNAME=your-email@example.com
-   MAIL_PASSWORD=your-smtp-key
-   ```
-
-3. **Build the project**
-
-   ```bash
-   mvn clean package
-   ```
-
-4. **Run the application**
-
-   ```bash
-   java -jar target/photoshare-0.0.1-SNAPSHOT.jar
-   ```
-
-   Or using Maven:
-
-   ```bash
-   mvn spring-boot:run
-   ```
-
-### Docker Deployment
-
-1. **Build and run with Docker Compose**
-
-   ```bash
-   docker-compose up -d
-   ```
-
-   This will start:
-
-   - PostgreSQL database (port 5432)
-   - Redis cache (port 6379)
-   - PhotoShare application (port 8080)
-
-2. **Access the application**
-   ```
-   http://localhost:8080
-   ```
-
----
-
-## 📁 Project Structure
+## 3. Cấu trúc dự án
 
 ```
 PhotoShare/
-├── src/
-│   ├── main/
-│   │   ├── java/com/dev/photoshare/
-│   │   │   ├── config/              # Configuration classes (Security, Redis, Web)
-│   │   │   ├── controller/          # REST API endpoints
-│   │   │   ├── dto/                 # Data Transfer Objects
-│   │   │   ├── entity/              # JPA entities
-│   │   │   ├── exception/           # Custom exceptions
-│   │   │   ├── repository/          # Data access layer
-│   │   │   ├── security/            # Security-related classes
-│   │   │   ├── service/             # Business logic layer
-│   │   │   └── utils/               # Utility classes and enums
-│   │   └── resources/
-│   │       └── application.yaml     # Configuration file
-│   └── test/
-│       └── java/                    # Test classes
-├── docker-compose.yml               # Docker Compose configuration
-├── Dockerfile                       # Docker image definition
-├── pom.xml                          # Maven configuration
-└── README.md                        # This file
+|-- src/
+|   |-- main/
+|   |   |-- java/com/dev/photoshare/
+|   |   |   |-- config/
+|   |   |   |-- controller/
+|   |   |   |-- dto/
+|   |   |   |-- entity/
+|   |   |   |-- exception/
+|   |   |   |-- repository/
+|   |   |   |-- security/
+|   |   |   |-- service/
+|   |   |   |-- usecase/
+|   |   |   \-- utils/
+|   |   \-- resources/
+|   |       |-- application.yaml
+|   |       \-- templates/mail/otp-email.html
+|   \-- test/
+|       \-- java/
+|-- init/
+|   \-- init.sql
+|-- upload/images/
+|-- Dockerfile
+|-- docker-compose.yml
+|-- pom.xml
+\-- README.md
 ```
 
----
+## 4. Yêu cầu môi trường
 
-## 🔌 API Endpoints
+- Java 17+
+- Maven 3.8+
+- PostgreSQL 15+
+- Redis 7+
+- Docker + Docker Compose (nếu chạy container)
 
-### Authentication
+## 5. Biến môi trường
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/refresh` - Refresh JWT token
-- `POST /api/auth/logout` - Logout user
+Dự án đang đọc biến môi trường từ application.yaml và docker-compose.yml. Tạo file .env ở thư mục gốc với các biến tối thiểu:
 
-### Photos
+```
+# Database
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/photoshare?currentSchema=public
+SPRING_DATASOURCE_USERNAME=photoshare
+SPRING_DATASOURCE_PASSWORD=your_db_password
 
-- `GET /api/photos` - Get all photos
-- `POST /api/photos` - Upload a new photo
-- `GET /api/photos/{id}` - Get photo details
-- `PUT /api/photos/{id}` - Update photo
-- `DELETE /api/photos/{id}` - Delete photo
-- `GET /api/photos/{id}/stats` - Get photo statistics
+# Redis
+SPRING_REDIS_HOST=localhost
+SPRING_REDIS_PORT=6379
+SPRING_REDIS_PASSWORD=
 
-### Comments
+# Mail
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_USERNAME=your_mail_username
+MAIL_PASSWORD=your_mail_password
+MAIL_FROM=noreply@example.com
 
-- `GET /api/photos/{photoId}/comments` - Get comments on a photo
-- `POST /api/photos/{photoId}/comments` - Add a comment
-- `DELETE /api/comments/{id}` - Delete a comment
+# JWT
+JWT_ACCESS_SECRET=replace_with_strong_secret
+REFRESH_SECRET=replace_with_strong_secret
 
-### Likes
+# Cloudflare R2
+R2_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+R2_BUCKET=photoshare-images
+R2_PUBLIC_URL=https://<public-domain>
+R2_ACCESS_KEY=<access-key>
+R2_SECRET_KEY=<secret-key>
 
-- `POST /api/photos/{photoId}/like` - Like a photo
-- `DELETE /api/photos/{photoId}/like` - Unlike a photo
-
-### Follow
-
-- `POST /api/users/{userId}/follow` - Follow a user
-- `DELETE /api/users/{userId}/follow` - Unfollow a user
-- `GET /api/users/{userId}/followers` - Get user followers
-
-### User Profile
-
-- `GET /api/users/{id}` - Get user profile
-- `PUT /api/users/{id}` - Update user profile
-- `GET /api/users/{id}/stats` - Get user statistics
-
----
-
-## 🗄️ Database Schema
-
-The application uses PostgreSQL with the following main entities:
-
-- **Users** - User accounts and profiles
-- **Photos** - Photo uploads and metadata
-- **Comments** - Comments on photos
-- **Likes** - Photo likes and reactions
-- **Follows** - User follow relationships
-- **Tags** - Photo tags and categories
-- **Notifications** - User notifications
-- **Refresh Tokens** - Token management
-- **Moderation Logs** - Content moderation history
-
----
-
-## ⚙️ Configuration
-
-### Application Properties
-
-Edit `src/main/resources/application.yaml`:
-
-```yaml
-spring:
-  application:
-    name: photoshare
-  datasource:
-    url: jdbc:postgresql://localhost:5432/photoshare
-    username: postgres
-    password: your_password
-  jpa:
-    hibernate:
-      ddl-auto: update # Options: none, validate, update, create-drop, create
-  redis:
-    host: localhost
-    port: 6379
-  mail:
-    host: smtp-relay.brevo.com
-    port: 587
+# Docker compose Redis (nếu dùng compose)
+REDIS_PORT=6379
+REDIS_PASSWORD=
 ```
 
-### File Upload Configuration
+Luu y bao mat:
 
-- **Max File Size**: 10MB
-- **Max Request Size**: 10MB
-- **Upload Directory**: `./uploads/`
+- Khong commit cac secret (JWT, mail, R2 key) len git.
+- Neu file .env hien tai da lo secret, can rotate key ngay.
 
----
+## 6. Khoi tao database
 
-## 🔒 Security Features
+Ban co the tao user/database bang script:
 
-- **JWT Authentication** - Token-based stateless authentication
-- **Password Encryption** - Secure password hashing
-- **Role-Based Authorization** - Control access based on user roles
-- **CORS Support** - Cross-origin resource sharing configuration
-- **Input Validation** - Server-side validation of all inputs
-- **SQL Injection Prevention** - Using parameterized queries with JPA
-- **Login Attempt Tracking** - Monitor and prevent brute force attacks
+- init/init.sql
 
----
+Noi dung script tao:
 
-## 🧪 Testing
+- user photoshare
+- database photoshare
+- cap quyen cho user photoshare
 
-Run tests with Maven:
+## 7. Chay local
 
-```bash
-mvn test
+1. Tao database photoshare va cap quyen user.
+2. Chinh .env cho dung moi truong.
+3. Build:
+
+```
+./mvnw clean package
 ```
 
-Or run specific test classes:
+Windows:
 
-```bash
-mvn test -Dtest=YourTestClassName
+```
+mvnw.cmd clean package
 ```
 
----
+4. Run:
 
-## 📦 Dependencies
-
-Core dependencies include:
-
-- Spring Boot Starters (Data JPA, Security, Web, Validation)
-- PostgreSQL JDBC Driver
-- Spring Data Redis
-- Thymeleaf Template Engine
-- Lombok (for reducing boilerplate)
-- Spring Mail (for email notifications)
-
-See `pom.xml` for the complete list of dependencies.
-
----
-
-## 🚧 Development
-
-### Building from Source
-
-```bash
-# Clean and build
-mvn clean package
-
-# Build skipping tests
-mvn clean package -DskipTests
-
-# Run with debug mode
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m"
+```
+./mvnw spring-boot:run
 ```
 
-### Code Quality
+Hoac:
 
-The project uses:
+```
+java -jar target/photoshare-0.0.1-SNAPSHOT.jar
+```
 
-- Spring Boot best practices
-- RESTful API design principles
-- Service layer architecture
-- Repository pattern for data access
+Mac dinh server chay tai:
 
----
+- http://localhost:8080
 
-## 🤝 Contributing
+Swagger UI:
 
-Contributions are welcome! Please follow these steps:
+- http://localhost:8080/swagger-ui/index.html
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 8. Chay bang Docker Compose
 
----
+Lenh:
 
-## 📄 License
+```
+docker compose up -d --build
+```
 
-This project is part of the PTIT curriculum. Please check the LICENSE file for more details.
+Trang thai compose hien tai:
 
----
+- Co service app
+- Co service redis
+- Khong co service postgresql
 
-## 👨‍💻 Author
+Vay nen PostgreSQL can chay ben ngoai (host may ban) va SPRING_DATASOURCE_URL phai tro den DB do.
 
-**dzungvd98** - [GitHub Profile](https://github.com/dzungvd98)
+## 9. Tai nguyen anh
 
----
+- Thu muc upload tren host: ./upload
+- Trong container: /upload
+- API public anh qua duong dan /images/\*\*
 
-## 📞 Support
+## 10. Bao mat va quyen truy cap
 
-For issues, questions, or suggestions, please open an issue in the [GitHub repository](https://github.com/dzungvd98/PhotoShare/issues).
+Trong SecurityConfig:
 
----
+- Mo cong khai:
+  - /api/auth/\*\*
+  - /swagger-ui/\*\*
+  - /swagger-ui.html
+  - /v3/api-docs/\*\*
+  - /images/\*\*
+- Cac endpoint con lai yeu cau JWT hop le.
 
-## 🎯 Roadmap
+## 11. CORS hien tai
 
-- [ ] Mobile app (iOS/Android)
-- [ ] Advanced photo filtering and effects
-- [ ] Direct messaging between users
-- [ ] Story/Story highlights feature
-- [ ] Real-time notifications using WebSocket
-- [ ] Photo discovery algorithm
-- [ ] User recommendations
-- [ ] Analytics dashboard for content creators
+WebConfig dang cho phep origin:
 
----
+- http://localhost:3000
+- http://localhost:5873
+- https://\*.phao.id.vn
 
-## 📚 Additional Resources
+Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
 
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- [Spring Security Documentation](https://spring.io/projects/spring-security)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Redis Documentation](https://redis.io/documentation)
-- [JWT Introduction](https://jwt.io/introduction)
+## 12. API hien tai (theo controller)
 
----
+Auth (api/auth)
 
-**Last Updated**: December 2025
+- POST /register
+- POST /login
+- POST /logout
+- POST /verify-account
+- POST /refresh
 
-**Status**: ✅ Active Development (dev branch)
+Photos (api/photos)
+
+- POST /
+- PUT /{photoId}
+- DELETE /{photoId}
+- GET /{photoId}
+- PATCH /{photoId}/review
+- GET /pending-approval
+- GET /popular
+- GET /latest
+- GET /follow
+- GET /{photoId}/comments
+- POST /{photoId}/likes
+
+Comments (api/comments)
+
+- GET /{id}/replies
+- POST /{targetId}/create
+- PUT /{id}
+- DELETE /{commentId}
+
+Follow (api/follow)
+
+- POST /?userId={id}
+
+Profiles (api/profiles)
+
+- GET /users/{userId}
+- GET /users/{userId}/posts
+- GET /users/{userId}/liked
+- PUT /edit
+
+Users (api/users)
+
+- GET /
+- PUT /{id}/status
+- PUT /{userId}/role
+
+Dashboard (api/dashboard)
+
+- GET /stats
+
+Reports (api/reports)
+
+- GET /
+- POST /
+- POST /{id}/handle
+
+## 13. Test
+
+Chay test:
+
+```
+./mvnw test
+```
+
+Windows:
+
+```
+mvnw.cmd test
+```
+
+## 14. Ghi chu
+
+- File enpo.txt dang la ghi chu endpoint cu, khong phai tai lieu chinh thuc.
+- Tai lieu uu tien theo README nay + Swagger UI.
