@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class ViolationReportController {
     private final IViolationReportService violationReportService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','MOD')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<ViolationReportView>>> getViolationReports(@Valid ViolationSearchRequest req,
                                                                                               @RequestParam(defaultValue = "1")
@@ -45,6 +47,7 @@ public class ViolationReportController {
         return ResponseEntityBuilder.ok(String.format("Tìm thấy %d report", response.getTotalElements()),response);
     }
 
+
     @PostMapping
     public ResponseEntity<ApiResponse<ViolationReportResponse>> violationReport(@RequestBody @Valid ReportViolationRequest request) {
         int userId = getUserIdFromToken();
@@ -54,6 +57,7 @@ public class ViolationReportController {
         return ResponseEntityBuilder.created("Gửi báo cáo thành công, nội dung sẽ được quản trị viên xem xét", response);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MOD')")
     @PostMapping("/{id}/handle")
     public ResponseEntity<ApiResponse<ViolationHandleResponse>> handleViolation(@PathVariable int id,
                                                                                 @RequestBody @Valid ViolationHandleRequest request) {

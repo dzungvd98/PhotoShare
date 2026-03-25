@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final IUserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<LstProfileResponse>>> getAllUsers(
             @RequestParam(defaultValue = "1")
@@ -36,6 +38,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> updateUserStatus(
             @PathVariable Integer id,
             @RequestParam("status") Integer status) {
@@ -45,6 +48,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponse>> updateUserRole(@PathVariable Integer userId,
                                                               @RequestParam("roleName")  String roleName) {
         UserResponse savedUser = userService.updateUserRole(userId,  roleName);

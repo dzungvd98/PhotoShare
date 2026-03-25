@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -74,6 +75,7 @@ public class PhotoController {
        return ResponseEntityBuilder.ok(photoService.getPhotoDetail(photoId, userId));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MOD')")
     @PatchMapping("/{photoId}/review")
     public ResponseEntity<ApiResponse<PhotoReviewResponse>> review(@PathVariable long photoId,
                                                            @RequestBody @Valid PhotoReviewRequest request) {
@@ -82,6 +84,7 @@ public class PhotoController {
         return ResponseEntityBuilder.ok("Phê duyệt ảnh thành công", photoService.reviewPhoto(photoId, modId, request.getModerationStatus(), request.getReason()));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MOD')")
     @GetMapping("/pending-approval")
     public ResponseEntity<ApiResponse<PageResponse<AwaitingApprovalPhotoResponse>>> getPendingApprovalPhoto(
             @RequestParam(defaultValue = "1")
