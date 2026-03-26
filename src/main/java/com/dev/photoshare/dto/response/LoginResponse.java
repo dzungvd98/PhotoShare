@@ -31,5 +31,6 @@ public class LoginResponse {
         private String fullName;
         private String role;
         private LocalDateTime lastLoginAt;
+        private String avatarUrl;
     }
 }
