@@ -267,6 +267,7 @@ public class LoginUseCase {
                         .fullName(user.getProfile().getDisplayName())
                         .role(role)
                         .lastLoginAt(user.getLastLogin())
+                        .avatarUrl(user.getProfile().getAvatarUrl())
                         .build())
                 .build();
 
