@@ -1,4 +1,4 @@
-# PhotoShare Backend
+# PhotoShare Backend (Hệ thống chia sẻ ảnh)
 
 Backend API cho hệ thống mạng xã hội chia sẻ ảnh, xây dựng với Spring Boot 3, PostgreSQL, Redis, JWT và Cloudflare R2.
 
